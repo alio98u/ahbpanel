@@ -2397,6 +2397,32 @@ button.cta:disabled{opacity:.5;cursor:not-allowed}
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:12px;color:#dbe4ff;display:flex;flex-direction:column;align-items:center;gap:6px}
 .chip svg{width:22px;height:22px;color:#4ea0ff}
 
+
+/* design 5: gradient + animation */
+.waves .w{transform-box:fill-box;transform-origin:center}
+.w1{animation:drift1 12s ease-in-out infinite alternate}
+.w2{animation:drift2 15s ease-in-out infinite alternate}
+.w3{animation:drift3 18s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(-40px,-26px) rotate(-1.2deg)}}
+@keyframes drift2{to{transform:translate(34px,-18px) rotate(1deg)}}
+@keyframes drift3{to{transform:translate(-26px,-34px) rotate(-.8deg)}}
+.card{
+  border:1.5px solid transparent;
+  background:linear-gradient(160deg,rgba(14,16,40,.9),rgba(8,10,28,.88)) padding-box,
+             linear-gradient(135deg,#00c8ff,#6a45ff 55%,#ff2bd6) border-box;
+  box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 40px rgba(106,69,255,.28);
+  animation:pulse 5s ease-in-out infinite alternate;
+}
+@keyframes pulse{to{box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 60px rgba(255,43,214,.3)}}
+button.cta{background:linear-gradient(100deg,#0a84ff,#6a45ff 55%,#d11cb8);background-size:200% 100%;
+  box-shadow:0 8px 26px rgba(106,69,255,.45);transition:background-position .5s,box-shadow .2s}
+button.cta:hover{background-position:100% 0;filter:none;box-shadow:0 10px 32px rgba(209,28,184,.5)}
+.wordmark{font-size:84px;background:linear-gradient(180deg,#4aa8ff,#5b3cff 60%,#a23dff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.slogan{margin-top:90px;font-size:22px;font-weight:700}
+.chips{margin-top:60px;gap:26px}
+.chip{background:none;border:none;backdrop-filter:none;-webkit-backdrop-filter:none;width:auto;padding:0;font-size:12px;color:rgba(255,255,255,.75)}
+.chip svg{width:26px;height:26px;color:#4ea0ff}
+
 @media(max-width:860px){
   .hero{display:none}
   .shell{justify-content:center}
@@ -2409,39 +2435,33 @@ button.cta:disabled{opacity:.5;cursor:not-allowed}
 <svg id="bg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#03020d"/><stop offset=".45" stop-color="#0d0a2e"/>
-      <stop offset=".72" stop-color="#2a1858"/><stop offset="1" stop-color="#4b2166"/>
+      <stop offset="0" stop-color="#050416"/><stop offset=".6" stop-color="#0b0a2e"/><stop offset="1" stop-color="#1a0f45"/>
     </linearGradient>
-    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2a1a5a"/><stop offset="1" stop-color="#05030f"/>
+    <linearGradient id="wv" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1fa2ff"/><stop offset=".5" stop-color="#6a45ff"/><stop offset="1" stop-color="#ff2bd6"/>
     </linearGradient>
-    <linearGradient id="peakLit" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff7ab8"/><stop offset=".5" stop-color="#b24ad8"/><stop offset="1" stop-color="#3b2a8a"/>
-    </linearGradient>
-    <radialGradient id="glow" cx=".35" cy=".55" r=".5">
-      <stop offset="0" stop-color="#ff5fb0" stop-opacity=".45"/><stop offset="1" stop-color="#ff5fb0" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+    <radialGradient id="g1" cx=".15" cy=".85" r=".6"><stop offset="0" stop-color="#2b6bff" stop-opacity=".45"/><stop offset="1" stop-color="#2b6bff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2" cx=".85" cy=".1" r=".5"><stop offset="0" stop-color="#9b3bff" stop-opacity=".3"/><stop offset="1" stop-color="#9b3bff" stop-opacity="0"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="9"/></filter>
   </defs>
   <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#g1)"/>
+  <rect width="1600" height="900" fill="url(#g2)"/>
   <g id="stars"></g>
-  <ellipse cx="560" cy="560" rx="520" ry="260" fill="url(#glow)"/>
-  <!-- far range -->
-  <path d="M0 640 L120 560 L230 610 L340 520 L450 600 L640 470 L760 580 L900 520 L1040 600 L1200 540 L1360 610 L1480 560 L1600 620 L1600 700 L0 700Z" fill="#161038" opacity=".9"/>
-  <!-- main peak -->
-  <path d="M60 700 L230 560 L330 600 L470 380 L540 440 L600 300 L690 430 L760 380 L900 560 L1010 620 L1100 700Z" fill="#120d36"/>
-  <path d="M600 300 L690 430 L760 380 L900 560 L820 600 L740 520 L700 560 L650 430Z" fill="url(#peakLit)" opacity=".85"/>
-  <path d="M470 380 L540 440 L600 300 L650 430 L600 520 L520 470 L490 560 L420 520Z" fill="#1d1450"/>
-  <path d="M600 300 L625 345 L600 335 L580 360Z" fill="#ffd7ec" opacity=".8"/>
-  <!-- foreground -->
-  <path d="M0 700 L180 650 L360 690 L520 660 L760 700 L1100 670 L1350 705 L1600 680 L1600 720 L0 720Z" fill="#06040f"/>
-  <!-- lake + reflection -->
-  <rect y="715" width="1600" height="185" fill="url(#lake)"/>
-  <g transform="translate(0,1430) scale(1,-1)" opacity=".28" filter="url(#blur6)">
-    <path d="M60 700 L230 560 L330 600 L470 380 L540 440 L600 300 L690 430 L760 380 L900 560 L1010 620 L1100 700Z" fill="#b24ad8"/>
+  <g class="waves" fill="none" stroke="url(#wv)" stroke-linecap="round">
+    <g class="w w1">
+      <path d="M-150 760 C150 560 330 900 640 700 S1080 520 1750 720" stroke-width="22" opacity=".35" filter="url(#soft)"/>
+      <path d="M-150 760 C150 560 330 900 640 700 S1080 520 1750 720" stroke-width="3" opacity=".95"/>
+    </g>
+    <g class="w w2">
+      <path d="M-150 800 C180 620 360 930 700 740 S1120 580 1750 770" stroke-width="2" opacity=".7"/>
+      <path d="M-150 830 C200 660 400 950 740 780 S1150 640 1750 810" stroke-width="1.5" opacity=".5"/>
+    </g>
+    <g class="w w3">
+      <path d="M-150 700 C120 500 300 850 600 650 S1040 470 1750 650" stroke-width="1.5" opacity=".55"/>
+      <path d="M-150 660 C100 470 290 800 580 610 S1020 430 1750 610" stroke-width="1" opacity=".4"/>
+    </g>
   </g>
-  <rect y="715" width="1600" height="185" fill="url(#lake)" opacity=".55"/>
-  <rect width="1600" height="900" fill="#02010a" opacity=".18"/>
 </svg>
 
 <div class="shell">
@@ -2500,11 +2520,11 @@ button.cta:disabled{opacity:.5;cursor:not-allowed}
     <div class="wordmark">AHB</div>
     <div class="wm-sub">PANEL</div>
     <div class="wm-ver">14.3.0</div>
-    <div class="slogan">قدرت مدیریت<br>در دستان شما</div>
+    <div class="slogan">آینده مدیریت سرور<br>از اینجا شروع می‌شود</div>
     <div class="chips">
-      <div class="chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>سریع</div>
-      <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"/><path d="m9 12 2 2 4-4" stroke-linecap="round"/></svg>امن</div>
-      <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg>پایدار</div>
+      <div class="chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>پایداری</div>
+      <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg>سرعت</div>
+      <div class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"/><path d="m9 12 2 2 4-4" stroke-linecap="round"/></svg>امنیت</div>
     </div>
   </div>
 </div>
@@ -2515,7 +2535,7 @@ button.cta:disabled{opacity:.5;cursor:not-allowed}
   function r(){s=(s*16807)%2147483647;return s/2147483647}
   for(var i=0;i<110;i++){
     var c=document.createElementNS(ns,'circle');
-    c.setAttribute('cx',(r()*1600).toFixed(0));c.setAttribute('cy',(r()*480).toFixed(0));
+    c.setAttribute('cx',(r()*1600).toFixed(0));c.setAttribute('cy',(r()*600).toFixed(0));
     c.setAttribute('r',(r()*1.3+.3).toFixed(2));c.setAttribute('fill','#fff');
     c.setAttribute('opacity',(r()*.6+.3).toFixed(2));g.appendChild(c);
   }
