@@ -1,5 +1,5 @@
 # ============================================================
-# ahbpanel 14.3.0
+# ahbpanel 14.4.0
 # Railway Ready
 # Created By Ahb
 # ============================================================
@@ -60,7 +60,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # ============================================================
 
 APP_NAME = "ahbpanel"
-APP_VERSION = "14.3.0"
+APP_VERSION = "14.4.0"
 
 SUPPORT_USERNAME = "@ahb_panel"
 SUPPORT_URL = "https://t.me/ahbpanel"
@@ -2203,7 +2203,7 @@ AHB Panel
 </div>
 
 <div class="version">
-14.3.0
+14.4.0
 </div>
 </div>
 
@@ -2251,7 +2251,7 @@ class="btn secondary"
 <div class="footer">
 
 <span>
-AHB Panel · 14.3.0
+AHB Panel · 14.4.0
 </span>
 
 <a
@@ -2470,7 +2470,7 @@ button.cta:hover{background-position:100% 0;filter:none;box-shadow:0 10px 32px r
       <div class="logo">P</div>
       <div>
         <div class="brand-name">AHB Panel</div>
-        <div class="brand-ver">14.3.0</div>
+        <div class="brand-ver">14.4.0</div>
       </div>
     </div>
 
@@ -2513,13 +2513,13 @@ button.cta:hover{background-position:100% 0;filter:none;box-shadow:0 10px 32px r
       </form>
     </div>
 
-    <div class="foot">AHB Panel · 14.3.0 · <a href="https://t.me/ahb_panel" target="_blank" rel="noopener">@ahb_panel</a></div>
+    <div class="foot">AHB Panel · 14.4.0 · <a href="https://t.me/ahb_panel" target="_blank" rel="noopener">@ahb_panel</a></div>
   </div>
 
   <div class="hero">
     <div class="wordmark">AHB</div>
     <div class="wm-sub">PANEL</div>
-    <div class="wm-ver">14.3.0</div>
+    <div class="wm-ver">14.4.0</div>
     <div class="slogan">آینده مدیریت سرور<br>از اینجا شروع می‌شود</div>
     <div class="chips">
       <div class="chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>پایداری</div>
@@ -4897,7 +4897,7 @@ AHB Panel
 </h1>
 
 <div class="version">
-14.3.0
+14.4.0
 </div>
 
 <div class="text">
@@ -6301,7 +6301,7 @@ DASHBOARD_HTML = r"""
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>AHBPanel 14.3.0</title>
+<title>AHBPanel 14.4.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -6807,7 +6807,7 @@ html.light .toast{background:rgba(255,255,255,.88)}
     <div class="sb-logo-icon">AHB</div>
     <div class="sb-logo-text">
       <div class="sb-logo-name">AHBPanel</div>
-      <div class="sb-logo-ver">v14.3.0</div>
+      <div class="sb-logo-ver">v14.4.0</div>
     </div>
   </div>
   <nav class="nav">
