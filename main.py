@@ -4074,7 +4074,7 @@ async def subscription_all(
 # ============================================================
 
 @app.get(
-    "/info/{uid}",
+    "/sub/{uid}",
     response_class=HTMLResponse,
 )
 async def info_page(
