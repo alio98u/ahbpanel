@@ -1125,7 +1125,7 @@ def get_link_info(
         "vless": vless_link_for_link(link, uid, host) if show_vless else "",
         "vless_full": vless_link_for_link(link, uid, host),
         "sub": f"https://{host}/sub/{uid}",
-        "info": f"https://{host}/info/{uid}",
+        "info": f"https://{host}/sub/{uid}/info",
         "support": SUPPORT_USERNAME,
     }
 
@@ -3313,7 +3313,7 @@ async def list_links(
                     f"https://{host}/sub/{uid}",
 
                 "info_url":
-                    f"https://{host}/info/{uid}",
+                    f"https://{host}/sub/{uid}/info",
 
                 "connected_ips":
                     len(
@@ -4023,7 +4023,7 @@ async def subscription_single(
         limit,
         link.get("expires_at"),
         host,
-        f"https://{host}/info/{uuid}",
+        f"https://{host}/sub/{uuid}/info",
         profile_title,
     )
 
@@ -4082,6 +4082,10 @@ async def subscription_all(
 
 @app.get(
     "/info/{uid}",
+    response_class=HTMLResponse,
+)
+@app.get(
+    "/sub/{uid}/info",
     response_class=HTMLResponse,
 )
 async def info_page(
@@ -5159,7 +5163,7 @@ async def public_sub_data(
                 "info_url":
                     (
                         f"https://{host}"
-                        f"/info/{link_id}"
+                        f"/sub/{link_id}/info"
                     ),
 
                 "connections":
@@ -7486,7 +7490,7 @@ function renderLinks(arr){
       <td class="ops">
         <button class="btn btn-sm" onclick="copyLinkById('${esc(uid)}')" title="VLESS"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
         <button class="btn btn-sm" onclick="copySubById('${esc(uid)}')" title="Sub"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></button>
-        <a class="btn btn-sm" href="/info/${esc(uid)}" target="_blank" title="INFO" style="text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></a>
+        <a class="btn btn-sm" href="/sub/${esc(uid)}/info" target="_blank" title="INFO" style="text-decoration:none"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></a>
         <button class="btn btn-sm" onclick="resetUsage('${esc(uid)}')" title="Reset"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
         <button class="btn btn-sm" onclick="openEdit('${esc(uid)}')" title="${lang==='fa'?'ویرایش':'Edit'}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
         <button class="btn btn-sm btn-d" onclick="deleteLink('${esc(uid)}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
