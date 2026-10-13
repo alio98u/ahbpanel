@@ -236,6 +236,7 @@ http_client: httpx.AsyncClient | None = None
 
 PROTOCOLS = (
     "vless-ws",
+    "multi-location",
     "xhttp-packet-up",
     "xhttp-stream-up",
     "xhttp-stream-one",
@@ -253,6 +254,7 @@ PROTOCOLS = (
 
 PROTOCOL_LABELS = {
     "vless-ws": "VLESS WebSocket ⭐",
+    "multi-location": "مولتی لوکیشن (Multi Location) 🌍",
     "xhttp-packet-up": "XHTTP Packet Up",
     "xhttp-stream-up": "XHTTP Stream Up",
     "xhttp-stream-one": "XHTTP Stream One",
@@ -292,6 +294,7 @@ DEFAULT_FINGERPRINT = "chrome"
 
 DEFAULT_ALPN_BY_PROTOCOL = {
     "vless-ws": "http/1.1",
+    "multi-location": "http/1.1",
     "xhttp-packet-up": "h2,http/1.1",
     "xhttp-stream-up": "h2,http/1.1",
     "xhttp-stream-one": "h2,http/1.1",
@@ -1015,6 +1018,8 @@ def generate_vless_link(
     alpn: str | None = None, port: int | None = None,
 ):
     protocol = normalize_protocol(protocol)
+    if protocol == "multi-location":
+        protocol = "vless-ws"  # اینباند مولتی لوکیشن همان وب‌سوکت VLESS است
     fp = (fingerprint or DEFAULT_FINGERPRINT).strip().lower()
     if fp not in FINGERPRINTS: fp = DEFAULT_FINGERPRINT
     port_value = safe_int(port, DEFAULT_PORT, MIN_PORT, MAX_PORT)
@@ -1552,6 +1557,12 @@ async def make_link(
 
     async with LINKS_LOCK:
         LINKS[uid] = record
+
+    if protocol == "multi-location":
+        try:
+            _node_kick()
+        except Exception:
+            pass
 
     if sub_id:
 
@@ -4002,7 +4013,9 @@ async def subscription_single(
     lines = [stats_line]
     used_names = set()
     cfg_count = max(1, min(40, int(link.get("config_count") or 1)))
-    if clean_ips:
+    if str(link.get("protocol") or "") == "multi-location":
+        lines.extend(multi_location_lines(uuid, link, host))
+    elif clean_ips:
         hosts = list(clean_ips)
         while len(hosts) < cfg_count:
             hosts.extend(clean_ips)
@@ -5647,6 +5660,765 @@ async def get_connections(
 
 
 # ============================================================
+# NODES / MULTI LOCATION
+# ------------------------------------------------------------
+# هر پنل هم می‌تواند master باشد و هم node. نود یک AHBPanel دیگر است
+# که با کلید API خودش به master وصل می‌شود. master کانفیگ‌های اینباند
+# multi-location را به نود می‌فرستد و مصرف را از آن پس می‌گیرد.
+# هسته‌ی VLESS (relay_vless / xhttp) دست‌نخورده است: نود همان
+# /ws/{uuid} را سرو می‌کند، فقط uuid از طرف master در LINKS او ثبت می‌شود.
+# ============================================================
+
+import hmac as _hmac
+import re as _re
+import socket as _socket
+from urllib.parse import urlsplit as _urlsplit
+
+NODES_FILE = DATA_DIR / "ahb_nodes.json"
+NODE_STATE: dict = {"instance_id": "", "node_key": "", "nodes": {}}
+NODE_SYNC_INTERVAL = 10
+NODE_HTTP_TIMEOUT = 12.0
+NODE_PING_TIMEOUT = 25.0
+NODE_KICK = asyncio.Event()
+_node_dirty = False
+_node_last_usage_save = 0.0
+_node_fail_log: dict = {}
+_REGION_CACHE: dict = {"data": None, "at": 0.0}
+_NODE_UUID_RE = _re.compile(r"^[0-9a-fA-F-]{8,64}$")
+
+COUNTRY_FA = {
+    "NL": "هلند", "US": "آمریکا", "DE": "آلمان", "GB": "انگلیس", "FR": "فرانسه",
+    "TR": "ترکیه", "FI": "فنلاند", "SE": "سوئد", "CH": "سوئیس", "AT": "اتریش",
+    "IT": "ایتالیا", "ES": "اسپانیا", "PL": "لهستان", "RO": "رومانی", "UA": "اوکراین",
+    "RU": "روسیه", "AE": "امارات", "IN": "هند", "SG": "سنگاپور", "JP": "ژاپن",
+    "KR": "کره جنوبی", "HK": "هنگ‌کنگ", "CA": "کانادا", "AU": "استرالیا",
+    "BR": "برزیل", "IE": "ایرلند", "CZ": "چک", "BG": "بلغارستان", "LT": "لیتوانی",
+    "LV": "لتونی", "EE": "استونی", "NO": "نروژ", "DK": "دانمارک", "BE": "بلژیک",
+    "PT": "پرتغال", "LU": "لوکزامبورگ", "HU": "مجارستان", "GR": "یونان",
+}
+
+
+def _node_flag(cc: str) -> str:
+    cc = (cc or "").strip().upper()
+    if len(cc) != 2 or not cc.isalpha():
+        return "🌐"
+    return "".join(chr(0x1F1E6 + ord(c) - 65) for c in cc)
+
+
+# ---------- ذخیره‌سازی (فایل جدا؛ state اصلی دست‌نخورده) ----------
+
+def _nodes_save():
+    try:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = NODES_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(NODE_STATE, ensure_ascii=False, indent=2), encoding="utf-8")
+        try:
+            os.chmod(tmp, 0o600)
+        except Exception:
+            pass
+        tmp.replace(NODES_FILE)
+    except Exception as exc:
+        logger.warning("Could not save nodes: %s", exc)
+
+
+def _nodes_load():
+    try:
+        if NODES_FILE.exists():
+            data = json.loads(NODES_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                for k in ("instance_id", "node_key", "nodes"):
+                    if k in data:
+                        NODE_STATE[k] = data[k]
+    except Exception as exc:
+        logger.warning("Could not load nodes: %s", exc)
+    changed = False
+    if not NODE_STATE.get("instance_id"):
+        NODE_STATE["instance_id"] = secrets.token_hex(8)
+        changed = True
+    if not NODE_STATE.get("node_key"):
+        NODE_STATE["node_key"] = "ahbn_" + secrets.token_urlsafe(32)
+        changed = True
+    if not isinstance(NODE_STATE.get("nodes"), dict):
+        NODE_STATE["nodes"] = {}
+        changed = True
+    if changed:
+        _nodes_save()
+
+
+def _own_node_key() -> str:
+    return (os.environ.get("NODE_API_KEY") or "").strip() or str(NODE_STATE.get("node_key") or "")
+
+
+def _node_owner_only(token):
+    if get_session_meta(token).get("role") != "owner":
+        raise HTTPException(status_code=403, detail="فقط مالک پنل به بخش نودها دسترسی دارد")
+
+
+# ---------- تشخیص ریجن (روی خود نود، از IP خروجی واقعی) ----------
+
+def _geo_norm(ip, cc, country, region, city, by):
+    cc = str(cc or "").upper()[:2]
+    return {
+        "ip": str(ip or ""),
+        "country_code": cc,
+        "country": COUNTRY_FA.get(cc) or str(country or ""),
+        "country_en": str(country or ""),
+        "region": str(region or ""),
+        "city": str(city or ""),
+        "flag": _node_flag(cc),
+        "detected_by": by,
+    }
+
+
+async def _geo_lookup(ip: str = "") -> dict:
+    # ip خالی = IP خروجی همین سرور. اگر همه‌ی سرویس‌ها خراب باشند {} برمی‌گردد.
+    ip = (ip or "").strip()
+    attempts = (
+        (
+            f"https://ipwho.is/{ip}",
+            lambda d: d.get("success") is not False and _geo_norm(
+                d.get("ip"), d.get("country_code"), d.get("country"), d.get("region"), d.get("city"), "ipwho.is"),
+        ),
+        (
+            f"https://ipapi.co/{ip + '/' if ip else ''}json/",
+            lambda d: not d.get("error") and _geo_norm(
+                d.get("ip"), d.get("country_code"), d.get("country_name"), d.get("region"), d.get("city"), "ipapi.co"),
+        ),
+        (
+            f"http://ip-api.com/json/{ip}?fields=status,country,countryCode,regionName,city,query",
+            lambda d: d.get("status") == "success" and _geo_norm(
+                d.get("query"), d.get("countryCode"), d.get("country"), d.get("regionName"), d.get("city"), "ip-api.com"),
+        ),
+    )
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(5.0, connect=3.0), follow_redirects=True) as c:
+            for url, parse in attempts:
+                try:
+                    r = await c.get(url)
+                    if r.status_code != 200:
+                        continue
+                    res = parse(r.json())
+                    if res and res.get("country_code"):
+                        return res
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    return {}
+
+
+def _geo_empty() -> dict:
+    return {"ip": "", "country_code": "", "country": "", "country_en": "", "region": "",
+            "city": "", "flag": "🌐", "detected_by": "", "provider_region": ""}
+
+
+async def _detect_region(force: bool = False) -> dict:
+    now = time.time()
+    cached = _REGION_CACHE["data"]
+    ttl = 6 * 3600 if (cached and cached.get("country_code")) else 300
+    if not force and cached is not None and now - _REGION_CACHE["at"] < ttl:
+        return cached
+    info = _geo_empty()
+    info.update(await _geo_lookup(""))
+    info["provider_region"] = (
+        os.environ.get("RAILWAY_REPLICA_REGION") or os.environ.get("RAILWAY_REGION") or ""
+    ).strip()
+    _REGION_CACHE["data"] = info
+    _REGION_CACHE["at"] = now
+    return info
+
+
+# ---------- سمت نود: API با کلید ----------
+
+async def require_node_key(request: Request):
+    ip = str(client_ip(request) or "?")
+    now = time.time()
+    rec = _node_fail_log.get(ip)
+    if rec and now - rec[1] < 300 and rec[0] >= 20:
+        raise HTTPException(status_code=429, detail="too many attempts")
+    key = (request.headers.get("x-node-key") or "").strip()
+    if not key:
+        auth = request.headers.get("authorization") or ""
+        if auth.lower().startswith("bearer "):
+            key = auth[7:].strip()
+    expected = _own_node_key()
+    ok = bool(expected) and bool(key) and _hmac.compare_digest(key.encode("utf-8"), expected.encode("utf-8"))
+    if not ok:
+        cur = rec if (rec and now - rec[1] < 300) else [0, now]
+        _node_fail_log[ip] = [cur[0] + 1, cur[1]]
+        if len(_node_fail_log) > 2000:
+            _node_fail_log.clear()
+        raise HTTPException(status_code=401, detail="invalid node key")
+    return True
+
+
+@app.get("/api/node/ping")
+async def node_ping(_=Depends(require_node_key)):
+    region = await _detect_region()
+    async with LINKS_LOCK:
+        managed = sum(1 for l in LINKS.values() if l.get("node_managed"))
+    return {
+        "ok": True,
+        "app": "ahbpanel",
+        "version": APP_VERSION,
+        "instance_id": NODE_STATE.get("instance_id", ""),
+        "region": region,
+        "managed_links": managed,
+        "time": int(time.time()),
+    }
+
+
+def _node_int(v, default=0):
+    try:
+        return max(0, int(v or 0))
+    except Exception:
+        return default
+
+
+@app.post("/api/node/sync")
+async def node_sync(request: Request, _=Depends(require_node_key)):
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid json")
+    if not isinstance(body, dict) or not isinstance(body.get("links"), dict):
+        raise HTTPException(status_code=400, detail="invalid payload")
+    incoming = body["links"]
+    if len(incoming) > 50000:
+        raise HTTPException(status_code=413, detail="too many links")
+    master_id = str(body.get("master_id") or "")[:64]
+    full = bool(body.get("full", False))
+    changed = False
+    usage: dict = {}
+
+    async with LINKS_LOCK:
+        for uid, spec in incoming.items():
+            if not isinstance(uid, str) or not _NODE_UUID_RE.match(uid) or not isinstance(spec, dict):
+                continue
+            rec = LINKS.get(uid)
+            if rec is not None and not rec.get("node_managed"):
+                continue  # هرگز کانفیگ محلی خود نود را override نمی‌کنیم
+            if rec is None:
+                rec = {
+                    "label": "Config", "limit_bytes": 0, "used_bytes": 0,
+                    "created_at": datetime.now().isoformat(), "active": True, "expires_at": None,
+                    "note": "مدیریت‌شده توسط پنل اصلی (مولتی لوکیشن)", "is_default": False, "sub_id": None,
+                    "protocol": "vless-ws", "fingerprint": DEFAULT_FINGERPRINT, "alpn": "", "port": DEFAULT_PORT,
+                    "ip_limit": 0, "speed_limit_bytes": 0, "connection_limit": 0, "fragment": "off",
+                    "security_profile": "balanced", "multi_login": False,
+                    "protocol_label": PROTOCOL_LABELS.get("vless-ws", "vless-ws"),
+                    "clean_ips": [], "alarm_enabled": False, "category_id": "0", "config_count": 1,
+                    "usage_history": [], "sort_order": 0,
+                    "node_managed": True, "node_master": master_id,
+                }
+                LINKS[uid] = rec
+                changed = True
+
+            used = _node_int(rec.get("used_bytes"))
+            active = bool(spec.get("active", True))
+            remaining = spec.get("remaining_bytes")
+            if remaining is None:
+                limit = 0
+            else:
+                remaining = _node_int(remaining)
+                if remaining <= 0:
+                    active = False
+                    limit = max(1, used)
+                else:
+                    limit = used + remaining
+            epoch = spec.get("expires_epoch")
+            try:
+                exp_iso = datetime.fromtimestamp(int(epoch)).isoformat() if epoch else None
+            except Exception:
+                exp_iso = None
+            fp = str(spec.get("fingerprint") or DEFAULT_FINGERPRINT).strip().lower()
+            if fp not in FINGERPRINTS:
+                fp = DEFAULT_FINGERPRINT
+            updates = {
+                "label": str(spec.get("label") or "Config")[:60],
+                "active": active,
+                "limit_bytes": limit,
+                "expires_at": exp_iso,
+                "ip_limit": _node_int(spec.get("ip_limit")),
+                "connection_limit": _node_int(spec.get("connection_limit")),
+                "speed_limit_bytes": _node_int(spec.get("speed_limit_bytes")),
+                "fingerprint": fp,
+                "alpn": str(spec.get("alpn") or "")[:100],
+                "node_master": master_id,
+            }
+            for k, v in updates.items():
+                if rec.get(k) != v:
+                    if k != "limit_bytes":  # limit با رشد مصرف هر بار عوض می‌شود
+                        changed = True
+                    rec[k] = v
+            usage[uid] = used
+
+        if full and master_id:
+            gone = [
+                u for u, r in LINKS.items()
+                if r.get("node_managed") and r.get("node_master") == master_id and u not in incoming
+            ]
+            for u in gone:
+                LINKS.pop(u, None)
+                changed = True
+
+    if changed:
+        asyncio.create_task(save_state())
+    cached = _REGION_CACHE["data"]
+    if cached is None:
+        asyncio.create_task(_detect_region())
+    return {
+        "ok": True,
+        "usage": usage,
+        "connections": len(connections),
+        "region": cached or {},
+        "version": APP_VERSION,
+    }
+
+
+# ---------- سمت master: صحبت با نود ----------
+
+def _node_normalize_url(raw: str) -> str:
+    raw = (raw or "").strip()
+    if not raw:
+        raise ValueError("آدرس پنل نود را وارد کنید")
+    if "://" not in raw:
+        raw = "https://" + raw
+    try:
+        u = _urlsplit(raw)
+        host = u.hostname
+        port = u.port
+    except Exception:
+        raise ValueError("آدرس نامعتبر است")
+    if u.scheme not in ("http", "https"):
+        raise ValueError("آدرس باید با https:// شروع شود")
+    if not host:
+        raise ValueError("آدرس نامعتبر است")
+    if u.username or u.password:
+        raise ValueError("آدرس نباید شامل نام کاربری/رمز باشد")
+    loopback = host in ("localhost", "127.0.0.1", "::1")
+    if u.scheme == "http" and not loopback:
+        raise ValueError("فقط آدرس https پشتیبانی می‌شود (کانفیگ‌ها با TLS ساخته می‌شوند)")
+    netloc = f"[{host}]" if ":" in host else host
+    if port:
+        netloc += f":{port}"
+    return f"{u.scheme}://{netloc}"
+
+
+def _node_error_from_exc(exc: Exception) -> str:
+    text = str(exc).lower()
+    if isinstance(exc, httpx.TimeoutException):
+        return "زمان اتصال به نود تمام شد (Timeout). آدرس را بررسی کنید و مطمئن شوید نود روشن است."
+    if any(s in text for s in ("certificate", "ssl", "tls")):
+        return "خطای گواهی TLS: گواهی HTTPS این آدرس معتبر نیست."
+    if any(s in text for s in ("name or service not known", "nodename nor servname", "getaddrinfo",
+                               "temporary failure in name resolution", "no address associated")):
+        return "آدرس پیدا نشد (DNS). نام دامنه را بررسی کنید."
+    if "refused" in text:
+        return "اتصال رد شد؛ پورت بسته است یا پنل روی این آدرس اجرا نیست."
+    return "اتصال به آدرس نود برقرار نشد. آدرس را بررسی کنید."
+
+
+async def _node_call(url: str, api_key: str, method: str, path: str, body=None, timeout: float = NODE_HTTP_TIMEOUT):
+    # خروجی: (data | None, error | None, latency_ms | None)
+    headers = {"X-Node-Key": api_key, "User-Agent": f"AHBPanel/{APP_VERSION}"}
+    t0 = time.monotonic()
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=8.0), follow_redirects=False) as c:
+            r = await c.request(method, url + path, headers=headers, json=body)
+    except Exception as exc:
+        return None, _node_error_from_exc(exc), None
+    latency = int((time.monotonic() - t0) * 1000)
+    code = r.status_code
+    if code in (401, 403):
+        return None, "کلید API اشتباه است.", latency
+    if code == 429:
+        return None, "تلاش‌های ناموفق زیاد بوده؛ چند دقیقه بعد دوباره امتحان کنید.", latency
+    if 300 <= code < 400:
+        return None, "آدرس به جای دیگری هدایت می‌شود؛ آدرس نهایی (https) را وارد کنید.", latency
+    if code in (404, 405):
+        return None, "این آدرس، پنل AHBPanel با پشتیبانی نود نیست (آدرس اشتباه یا نسخه قدیمی).", latency
+    if code >= 400:
+        return None, f"خطای سرور نود ({code}).", latency
+    try:
+        data = r.json()
+    except Exception:
+        return None, "پاسخ نامعتبر از نود؛ احتمالاً این آدرس پنل AHBPanel نیست.", latency
+    if not isinstance(data, dict):
+        return None, "پاسخ نامعتبر از نود.", latency
+    return data, None, latency
+
+
+async def _node_resolve_ip(host: str) -> str:
+    try:
+        loop = asyncio.get_running_loop()
+        infos = await loop.getaddrinfo(host, None, type=_socket.SOCK_STREAM)
+        return infos[0][4][0] if infos else ""
+    except Exception:
+        return ""
+
+
+def _node_title(region: dict, host: str = "") -> str:
+    country = region.get("country") or region.get("country_en") or ""
+    city = region.get("city") or ""
+    title = country
+    if city and city != country:
+        title = f"{country} - {city}" if country else city
+    return (title or host or "Node").strip()
+
+
+def _node_apply_region(n: dict, region):
+    if not isinstance(region, dict):
+        return
+    merged = dict(n.get("region") or {})
+    for k, v in region.items():
+        if v not in (None, ""):
+            merged[k] = v
+    n["region"] = merged
+    if n.get("auto_name"):
+        n["name"] = _node_title(merged, n.get("host", ""))
+
+
+def _node_public(n: dict) -> dict:
+    r = n.get("region") or {}
+    k = str(n.get("api_key") or "")
+    return {
+        "id": n.get("id"), "name": n.get("name", ""), "url": n.get("url", ""), "host": n.get("host", ""),
+        "enabled": bool(n.get("enabled", True)), "status": n.get("status", "unknown"),
+        "last_error": n.get("last_error", ""), "last_seen": n.get("last_seen"),
+        "latency_ms": n.get("latency_ms"), "connections": n.get("connections", 0),
+        "version": n.get("version", ""), "key_hint": ("…" + k[-4:]) if len(k) >= 8 else "",
+        "flag": r.get("flag") or "🌐", "country": r.get("country", ""), "country_code": r.get("country_code", ""),
+        "city": r.get("city", ""), "provider_region": r.get("provider_region", ""), "ip": r.get("ip", ""),
+        "added_at": n.get("added_at"),
+    }
+
+
+def _node_active_list() -> list:
+    out = [
+        n for n in NODE_STATE.get("nodes", {}).values()
+        if n.get("enabled", True) and n.get("status") != "offline"
+    ]
+    return sorted(out, key=lambda n: n.get("added_at", 0))
+
+
+def _node_exp_epoch(link: dict):
+    exp = link.get("expires_at")
+    if not exp:
+        return None
+    try:
+        return int(datetime.fromisoformat(str(exp)).timestamp())
+    except Exception:
+        return None
+
+
+async def _node_build_payload() -> dict:
+    links: dict = {}
+    async with LINKS_LOCK:
+        for uid, link in LINKS.items():
+            if link.get("protocol") != "multi-location":
+                continue
+            limit = _node_int(link.get("limit_bytes"))
+            used = _node_int(link.get("used_bytes"))
+            links[uid] = {
+                "label": str(link.get("label") or "Config")[:60],
+                "active": bool(link.get("active", True)),
+                "expires_epoch": _node_exp_epoch(link),
+                "remaining_bytes": max(0, limit - used) if limit > 0 else None,
+                "ip_limit": _node_int(link.get("ip_limit")),
+                "connection_limit": _node_int(link.get("connection_limit")),
+                "speed_limit_bytes": _node_int(link.get("speed_limit_bytes")),
+                "fingerprint": link.get("fingerprint", DEFAULT_FINGERPRINT),
+                "alpn": link.get("alpn", ""),
+            }
+    return links
+
+
+async def _node_apply_usage(nid: str, usage: dict):
+    global _node_last_usage_save
+    total_delta = 0
+    async with LINKS_LOCK:
+        for uid, nu in (usage or {}).items():
+            link = LINKS.get(uid)
+            if not link or link.get("protocol") != "multi-location":
+                continue
+            try:
+                nu = max(0, int(nu))
+            except Exception:
+                continue
+            seen = link.get("node_seen")
+            if not isinstance(seen, dict):
+                seen = {}
+                link["node_seen"] = seen
+            last = _node_int(seen.get(nid))
+            delta = nu - last if nu >= last else nu  # نود ریست/بازسازی شده
+            seen[nid] = nu
+            if delta > 0:
+                link["used_bytes"] = _node_int(link.get("used_bytes")) + delta
+                total_delta += delta
+        if total_delta:
+            stats["total_bytes"] += total_delta
+            hourly_traffic[now_ir().strftime("%H:00")] += total_delta
+    if total_delta and time.time() - _node_last_usage_save > 30:
+        _node_last_usage_save = time.time()
+        asyncio.create_task(save_state())
+
+
+def _node_set_status(n: dict, status: str, error: str = ""):
+    global _node_dirty
+    if n.get("status") != status:
+        _node_dirty = True
+        if status == "offline":
+            log_activity("node", f"نود «{n.get('name')}» قطع شد: {error}", "warn")
+        elif n.get("status") == "offline":
+            log_activity("node", f"نود «{n.get('name')}» دوباره متصل شد", "ok")
+    n["status"] = status
+    n["last_error"] = error
+
+
+async def _node_sync_one(nid: str):
+    global _node_dirty
+    n = NODE_STATE.get("nodes", {}).get(nid)
+    if not n or not n.get("enabled", True):
+        return
+    payload = {
+        "master_id": NODE_STATE.get("instance_id", ""),
+        "full": True,
+        "links": await _node_build_payload(),
+    }
+    data, err, lat = await _node_call(n["url"], n["api_key"], "POST", "/api/node/sync", payload)
+    if err or not data or not data.get("ok"):
+        _node_set_status(n, "offline", err or "پاسخ نامعتبر از نود")
+        return
+    _node_set_status(n, "online", "")
+    n["last_seen"] = time.time()
+    n["latency_ms"] = lat
+    n["connections"] = _node_int(data.get("connections"))
+    n["version"] = str(data.get("version") or n.get("version", ""))
+    reg = data.get("region")
+    if isinstance(reg, dict) and reg.get("country_code"):
+        before = json.dumps(n.get("region"), sort_keys=True, ensure_ascii=False)
+        _node_apply_region(n, reg)
+        if json.dumps(n.get("region"), sort_keys=True, ensure_ascii=False) != before:
+            _node_dirty = True
+    await _node_apply_usage(nid, data.get("usage") or {})
+
+
+def _node_kick():
+    try:
+        NODE_KICK.set()
+    except Exception:
+        pass
+
+
+async def _node_sync_loop():
+    global _node_dirty
+    await asyncio.sleep(3)
+    while True:
+        try:
+            ids = [i for i, n in NODE_STATE.get("nodes", {}).items() if n.get("enabled", True)]
+            if ids:
+                await asyncio.gather(*(_node_sync_one(i) for i in ids), return_exceptions=True)
+            if _node_dirty:
+                _node_dirty = False
+                _nodes_save()
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.warning("node sync loop error: %s", exc)
+        try:
+            await asyncio.wait_for(NODE_KICK.wait(), timeout=NODE_SYNC_INTERVAL)
+        except asyncio.TimeoutError:
+            pass
+        NODE_KICK.clear()
+
+
+@app.on_event("startup")
+async def _nodes_startup():
+    _nodes_load()
+    asyncio.create_task(_node_sync_loop())
+    logger.info("Nodes loaded: %d", len(NODE_STATE.get("nodes", {})))
+
+
+def multi_location_lines(uuid: str, link: dict, fallback_host: str) -> list:
+    # به تعداد نودهای فعال یک کانفیگ vless-ws می‌سازد؛ بدون نود، کانفیگ همین پنل.
+    fp = link.get("fingerprint", DEFAULT_FINGERPRINT)
+    alpn = link.get("alpn") or None
+    lines = []
+    seen_names: dict = {}
+    for n in _node_active_list():
+        reg = n.get("region") or {}
+        base = f"{reg.get('flag') or '🌐'} {n.get('name') or n.get('host')}".strip()
+        seen_names[base] = seen_names.get(base, 0) + 1
+        remark = base if seen_names[base] == 1 else f"{base} #{seen_names[base]}"
+        lines.append(generate_vless_link(
+            uuid, n["host"], remark=remark, protocol="vless-ws",
+            fingerprint=fp, alpn=alpn, port=int(n.get("port") or DEFAULT_PORT),
+        ))
+    if not lines:
+        lines.append(generate_vless_link(
+            uuid, fallback_host, remark=str(link.get("label") or "Config"), protocol="vless-ws",
+            fingerprint=fp, alpn=alpn, port=link.get("port", DEFAULT_PORT),
+        ))
+    return lines
+
+
+# ---------- API مدیریت نودها (فقط مالک پنل) ----------
+
+@app.get("/api/nodes")
+async def api_nodes_list(token=Depends(require_auth)):
+    _node_owner_only(token)
+    on_railway = bool(os.environ.get("RAILWAY_PROJECT_ID") or os.environ.get("RAILWAY_ENVIRONMENT"))
+    unstable = on_railway and not os.environ.get("RAILWAY_VOLUME_MOUNT_PATH") and not os.environ.get("NODE_API_KEY")
+    nodes = sorted(NODE_STATE.get("nodes", {}).values(), key=lambda n: n.get("added_at", 0))
+    return {
+        "nodes": [_node_public(n) for n in nodes],
+        "node_key": _own_node_key(),
+        "key_from_env": bool(os.environ.get("NODE_API_KEY")),
+        "key_unstable": bool(unstable),
+        "instance_id": NODE_STATE.get("instance_id", ""),
+    }
+
+
+@app.post("/api/nodes")
+async def api_nodes_add(request: Request, token=Depends(require_auth)):
+    _node_owner_only(token)
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="اطلاعات نامعتبر است")
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="اطلاعات نامعتبر است")
+    try:
+        url = _node_normalize_url(str(body.get("url") or ""))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    api_key = str(body.get("api_key") or "").strip()
+    if len(api_key) < 8:
+        raise HTTPException(status_code=400, detail="کلید API را وارد کنید")
+    custom_name = str(body.get("name") or "").strip()[:60]
+    host = _urlsplit(url).hostname or ""
+    port = _urlsplit(url).port or (443 if url.startswith("https") else 80)
+
+    for n in NODE_STATE.get("nodes", {}).values():
+        if n.get("url") == url:
+            raise HTTPException(status_code=409, detail="این نود قبلاً اضافه شده است")
+    own_host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or "").split(":")[0].strip().lower()
+    if own_host and own_host == host.lower():
+        raise HTTPException(status_code=400, detail="نمی‌توانید خود همین پنل را به‌عنوان نود اضافه کنید")
+
+    data, err, lat = await _node_call(url, api_key, "GET", "/api/node/ping", timeout=NODE_PING_TIMEOUT)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    if data.get("app") != "ahbpanel" or not data.get("ok"):
+        raise HTTPException(status_code=400, detail="این آدرس، پنل AHBPanel نیست.")
+    if data.get("instance_id") and data.get("instance_id") == NODE_STATE.get("instance_id"):
+        raise HTTPException(status_code=400, detail="نمی‌توانید خود همین پنل را به‌عنوان نود اضافه کنید")
+
+    region = data.get("region") if isinstance(data.get("region"), dict) else {}
+    if not region.get("country_code"):
+        ip = await _node_resolve_ip(host)
+        if ip:
+            geo = await _geo_lookup(ip)
+            if geo:
+                region = {**region, **geo}
+
+    nid = secrets.token_hex(4)
+    node = {
+        "id": nid, "name": custom_name, "auto_name": not custom_name, "url": url, "host": host, "port": port,
+        "api_key": api_key, "enabled": True, "status": "online", "last_error": "", "last_seen": time.time(),
+        "latency_ms": lat, "connections": 0, "version": str(data.get("version") or ""),
+        "region": {}, "added_at": time.time(),
+    }
+    _node_apply_region(node, region)
+    if not node["name"]:
+        node["name"] = _node_title(node.get("region") or {}, host)
+    NODE_STATE["nodes"][nid] = node
+    _nodes_save()
+    log_activity("node", f"نود «{node['name']}» اضافه شد", "ok")
+    _node_kick()
+    return {"ok": True, "node": _node_public(node)}
+
+
+@app.patch("/api/nodes/{nid}")
+async def api_nodes_patch(nid: str, request: Request, token=Depends(require_auth)):
+    _node_owner_only(token)
+    n = NODE_STATE.get("nodes", {}).get(nid)
+    if not n:
+        raise HTTPException(status_code=404, detail="نود پیدا نشد")
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="اطلاعات نامعتبر است")
+    if isinstance(body, dict):
+        if "enabled" in body:
+            n["enabled"] = bool(body["enabled"])
+        if "name" in body:
+            nm = str(body.get("name") or "").strip()[:60]
+            if nm:
+                n["name"] = nm
+                n["auto_name"] = False
+            else:
+                n["auto_name"] = True
+                n["name"] = _node_title(n.get("region") or {}, n.get("host", ""))
+    _nodes_save()
+    _node_kick()
+    return {"ok": True, "node": _node_public(n)}
+
+
+@app.post("/api/nodes/{nid}/test")
+async def api_nodes_test(nid: str, token=Depends(require_auth)):
+    _node_owner_only(token)
+    n = NODE_STATE.get("nodes", {}).get(nid)
+    if not n:
+        raise HTTPException(status_code=404, detail="نود پیدا نشد")
+    data, err, lat = await _node_call(n["url"], n["api_key"], "GET", "/api/node/ping", timeout=NODE_PING_TIMEOUT)
+    if err or not data or data.get("app") != "ahbpanel":
+        _node_set_status(n, "offline", err or "پاسخ نامعتبر")
+        _nodes_save()
+        return {"ok": False, "error": err or "پاسخ نامعتبر", "node": _node_public(n)}
+    _node_set_status(n, "online", "")
+    n["last_seen"] = time.time()
+    n["latency_ms"] = lat
+    n["version"] = str(data.get("version") or n.get("version", ""))
+    if isinstance(data.get("region"), dict):
+        _node_apply_region(n, data["region"])
+    _nodes_save()
+    _node_kick()
+    return {"ok": True, "node": _node_public(n)}
+
+
+@app.delete("/api/nodes/{nid}")
+async def api_nodes_delete(nid: str, token=Depends(require_auth)):
+    _node_owner_only(token)
+    n = NODE_STATE.get("nodes", {}).pop(nid, None)
+    if not n:
+        raise HTTPException(status_code=404, detail="نود پیدا نشد")
+    _nodes_save()
+    # تلاش برای پاک‌کردن کانفیگ‌های همین master از روی نود (اگر در دسترس بود)
+    try:
+        await asyncio.wait_for(
+            _node_call(n["url"], n["api_key"], "POST", "/api/node/sync",
+                       {"master_id": NODE_STATE.get("instance_id", ""), "full": True, "links": {}}),
+            timeout=10,
+        )
+    except Exception:
+        pass
+    log_activity("node", f"نود «{n.get('name')}» حذف شد", "info")
+    return {"ok": True}
+
+
+@app.post("/api/node-key/regenerate")
+async def api_node_key_regenerate(token=Depends(require_auth)):
+    _node_owner_only(token)
+    if os.environ.get("NODE_API_KEY"):
+        raise HTTPException(status_code=400, detail="کلید از متغیر NODE_API_KEY خوانده می‌شود؛ از همان‌جا تغییرش بده")
+    NODE_STATE["node_key"] = "ahbn_" + secrets.token_urlsafe(32)
+    _nodes_save()
+    return {"ok": True, "node_key": NODE_STATE["node_key"]}
+
+
+# ============================================================
 # OPTIONAL EXISTING PROJECT MODULES
 # ============================================================
 
@@ -6831,6 +7603,10 @@ html.light .toast{background:rgba(255,255,255,.88)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
       <span class="nav-label" data-i18n="nav_groups">گروه‌هـا</span>
     </button>
+    <button class="nav-item" data-page="nodes" data-perm="nodes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>
+      <span class="nav-label">نودها</span>
+    </button>
     <button class="nav-item" data-page="create" data-perm="create">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
       <span class="nav-label" data-i18n="nav_create">ساخت کانفیـگ</span>
@@ -7021,6 +7797,42 @@ html.light .toast{background:rgba(255,255,255,.88)}
     <div class="card" style="padding:0">
       <div style="padding:16px 18px;border-bottom:1px solid var(--card-b);font-weight:700">لیست گروه‌ها</div>
       <div id="groupsList" style="padding:12px;max-height:480px;overflow:auto">...</div>
+    </div>
+  </div>
+</section>
+<section class="page" id="page-nodes">
+  <div class="page-head">
+    <div>
+      <div class="page-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg><span>نودها</span></div>
+      <div class="page-sub">اتصال پنل‌های دیگر به‌عنوان نود · اینباند مولتی لوکیشن</div>
+    </div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">افزودن نود</div>
+        <div class="field"><label>آدرس پنل نود</label><input id="ndUrl" placeholder="https://my-node.up.railway.app" autocomplete="off" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>کلید API نود</label><input id="ndKey" placeholder="ahbn_..." autocomplete="off" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>نام (اختیاری؛ خالی = از ریجن تشخیص داده می‌شود)</label><input id="ndName" autocomplete="off"></div>
+        <div id="ndMsg" style="display:none;font-size:12px;line-height:1.9;padding:10px 12px;border-radius:10px;margin-bottom:10px"></div>
+        <button class="btn btn-p" id="ndAddBtn" style="width:100%" onclick="addNode()">تست اتصال و افزودن</button>
+      </div>
+      <div class="card">
+        <div class="card-title">کلید API این پنل</div>
+        <div style="font-size:12px;color:var(--t3);line-height:1.9;margin-bottom:10px">برای اضافه‌کردن این پنل به‌عنوان نودِ یک پنل دیگر، آدرس و کلید زیر را همان‌جا وارد کن.</div>
+        <div class="field"><label>آدرس این پنل</label><input id="ndOwnUrl" readonly style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>کلید API</label><input id="ndOwnKey" type="password" readonly style="direction:ltr;text-align:left"></div>
+        <div id="ndKeyWarn" style="display:none;font-size:12px;line-height:1.9;padding:10px 12px;border-radius:10px;margin-bottom:10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fbbf24">روی ریلوی Volume با مسیر /data وصل نیست؛ با هر دیپلوی این کلید عوض می‌شود. یا Volume وصل کن یا متغیر NODE_API_KEY را روی ریلوی تنظیم کن.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="toggleOwnKey()">نمایش</button>
+          <button class="btn btn-sm" onclick="copyOwnKey()">کپی کلید</button>
+          <button class="btn btn-sm btn-d" onclick="regenOwnKey()">کلید جدید</button>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:0">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--card-b);font-weight:700">لیست نودها</div>
+      <div id="nodesList" style="padding:12px;max-height:640px;overflow:auto">...</div>
     </div>
   </div>
 </section>
@@ -7634,6 +8446,7 @@ goPage=function(name){
   if(name==='news') loadNews();
   if(name==='admins') loadAdmins();
   if(name==='groups') loadGroups();
+  if(name==='nodes') loadNodes();
   if(name==='settings') loadSecurity();
 };
 
@@ -7802,6 +8615,98 @@ async function saveEdit(){
   const r=await api('/api/links/'+encodeURIComponent(uid),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   btn.disabled=false;
   if(r!==null){closeEdit();toast(lang==='fa'?'ذخیره شد':'Saved');refreshAll()}
+}
+async function nodeFetch(url,opts={}){
+  try{
+    const r=await fetch(url,{cache:'no-store',credentials:'same-origin',...opts});
+    if(r.status===401){location.href='/login';return {ok:false,error:'unauthorized'}}
+    let d=null;try{d=await r.json()}catch(e){d={}}
+    if(!r.ok)return {ok:false,error:d.detail||d.error||'خطا'};
+    return {ok:true,data:d};
+  }catch(e){return {ok:false,error:'ارتباط با پنل برقرار نشد'}}
+}
+function ndMsg(text,kind){
+  const el=document.getElementById('ndMsg');
+  if(!text){el.style.display='none';return}
+  const c={ok:['rgba(34,197,94,.12)','rgba(34,197,94,.3)','#86efac'],err:['rgba(239,68,68,.12)','rgba(239,68,68,.3)','#fca5a5'],info:['rgba(59,130,246,.12)','rgba(59,130,246,.3)','#93c5fd']}[kind||'info'];
+  el.style.cssText='display:block;font-size:12px;line-height:1.9;padding:10px 12px;border-radius:10px;margin-bottom:10px;background:'+c[0]+';border:1px solid '+c[1]+';color:'+c[2];
+  el.textContent=text;
+}
+async function loadNodes(){
+  const r=await nodeFetch('/api/nodes');
+  const box=document.getElementById('nodesList');
+  if(!r.ok){box.innerHTML='<div style="color:var(--t3);text-align:center;padding:20px">'+esc(r.error)+'</div>';return}
+  const d=r.data;
+  window.__ownNodeKey=d.node_key||'';
+  document.getElementById('ndOwnUrl').value=location.origin;
+  document.getElementById('ndOwnKey').value=d.node_key||'';
+  document.getElementById('ndKeyWarn').style.display=d.key_unstable?'block':'none';
+  const nodes=d.nodes||[];
+  if(!nodes.length){box.innerHTML='<div style="color:var(--t3);text-align:center;padding:24px;font-size:13px;line-height:2">هنوز نودی اضافه نشده.<br>آدرس و کلید API پنل نود را در فرم بالا وارد کن.</div>';return}
+  box.innerHTML=nodes.map(n=>{
+    const st=n.status==='online'?'<span style="color:#22c55e">● آنلاین</span>':(n.status==='offline'?'<span style="color:#ef4444">● آفلاین</span>':'<span style="color:var(--t3)">● نامشخص</span>');
+    const loc=[n.country,n.city,n.provider_region].filter(Boolean).join(' · ')||'ریجن نامشخص';
+    const lat=(n.status==='online'&&n.latency_ms!=null)?(' · '+n.latency_ms+'ms'):'';
+    const err=(n.status==='offline'&&n.last_error)?'<div style="font-size:11px;color:#fca5a5;margin-top:6px;line-height:1.8">'+esc(n.last_error)+'</div>':'';
+    const op=n.enabled?'':';opacity:.55';
+    return '<div class="nd-row" style="border:1px solid var(--card-b);border-radius:14px;padding:12px 14px;margin-bottom:10px'+op+'">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
+      +'<div style="font-weight:700;font-size:14px">'+esc(n.flag||'🌐')+' '+esc(n.name)+'</div><div style="font-size:12px">'+st+esc(lat)+'</div></div>'
+      +'<div style="font-size:12px;color:var(--t3);margin-top:6px;direction:ltr;text-align:left;word-break:break-all">'+esc(n.url)+'</div>'
+      +'<div style="font-size:12px;color:var(--t2);margin-top:4px">'+esc(loc)+(n.ip?' · <span style="direction:ltr;display:inline-block">'+esc(n.ip)+'</span>':'')+'</div>'
+      +'<div style="font-size:11px;color:var(--t3);margin-top:4px">اتصال فعال: '+(n.connections||0)+(n.version?' · نسخه '+esc(n.version):'')+(n.key_hint?' · کلید '+esc(n.key_hint):'')+'</div>'
+      +err
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+      +'<button class="btn btn-sm" onclick="testNode(\''+esc(n.id)+'\')">تست اتصال</button>'
+      +'<button class="btn btn-sm" onclick="toggleNode(\''+esc(n.id)+'\','+(n.enabled?'false':'true')+')">'+(n.enabled?'غیرفعال‌کردن':'فعال‌کردن')+'</button>'
+      +'<button class="btn btn-sm btn-d" onclick="deleteNode(\''+esc(n.id)+'\')">حذف</button>'
+      +'</div></div>';
+  }).join('');
+}
+async function addNode(){
+  const url=document.getElementById('ndUrl').value.trim();
+  const key=document.getElementById('ndKey').value.trim();
+  const name=document.getElementById('ndName').value.trim();
+  if(!url||!key){ndMsg('آدرس پنل و کلید API را وارد کن.','err');return}
+  const btn=document.getElementById('ndAddBtn');btn.disabled=true;
+  ndMsg('در حال اتصال به نود و بررسی کلید...','info');
+  const r=await nodeFetch('/api/nodes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url,api_key:key,name:name})});
+  btn.disabled=false;
+  if(!r.ok){ndMsg('❌ '+r.error,'err');return}
+  const n=r.data.node||{};
+  ndMsg('✅ نود متصل شد: '+(n.flag||'')+' '+(n.name||'')+(n.ip?' ('+n.ip+')':''),'ok');
+  document.getElementById('ndUrl').value='';document.getElementById('ndKey').value='';document.getElementById('ndName').value='';
+  loadNodes();
+}
+async function testNode(id){
+  toast('در حال تست اتصال...');
+  const r=await nodeFetch('/api/nodes/'+encodeURIComponent(id)+'/test',{method:'POST'});
+  if(!r.ok)toast(r.error);
+  else toast(r.data.ok?'اتصال برقرار است ✅':('❌ '+(r.data.error||'خطا')));
+  loadNodes();
+}
+async function toggleNode(id,enabled){
+  const r=await nodeFetch('/api/nodes/'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:enabled})});
+  if(!r.ok)toast(r.error);
+  loadNodes();
+}
+async function deleteNode(id){
+  if(!confirm('این نود حذف شود؟ کانفیگ‌های مولتی لوکیشن دیگر روی آن ساخته نمی‌شوند.'))return;
+  const r=await nodeFetch('/api/nodes/'+encodeURIComponent(id),{method:'DELETE'});
+  if(!r.ok)toast(r.error);else toast('نود حذف شد');
+  loadNodes();
+}
+function toggleOwnKey(){const el=document.getElementById('ndOwnKey');el.type=el.type==='password'?'text':'password'}
+async function copyOwnKey(){
+  const v=window.__ownNodeKey||'';
+  try{await navigator.clipboard.writeText(v);toast('کپی شد')}
+  catch(e){const el=document.getElementById('ndOwnKey');el.type='text';el.select();try{document.execCommand('copy');toast('کپی شد')}catch(e2){toast('کپی نشد')}}
+}
+async function regenOwnKey(){
+  if(!confirm('کلید جدید ساخته شود؟ پنل‌هایی که این پنل را به‌عنوان نود دارند باید با کلید جدید دوباره اضافه شوند.'))return;
+  const r=await nodeFetch('/api/node-key/regenerate',{method:'POST'});
+  if(!r.ok){toast(r.error);return}
+  toast('کلید جدید ساخته شد');loadNodes();
 }
 async function resetUsage(uid){
   if(!confirm(lang==='fa'?'مصرف ریست شود؟':'Reset usage?'))return;
