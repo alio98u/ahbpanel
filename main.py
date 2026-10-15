@@ -1,5 +1,5 @@
 # ============================================================
-# ahbpanel 14.6.0
+# ahbpanel 14.7.0
 # Railway Ready
 # Created By Ahb
 # ============================================================
@@ -60,7 +60,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # ============================================================
 
 APP_NAME = "ahbpanel"
-APP_VERSION = "14.6.0"
+APP_VERSION = "14.7.0"
 
 SUPPORT_USERNAME = "@ahb_panel"
 SUPPORT_URL = "https://t.me/ahbpanel"
@@ -2258,7 +2258,7 @@ AHB Panel
 </div>
 
 <div class="version">
-14.6.0
+14.7.0
 </div>
 </div>
 
@@ -2306,7 +2306,7 @@ class="btn secondary"
 <div class="footer">
 
 <span>
-AHB Panel · 14.6.0
+AHB Panel · 14.7.0
 </span>
 
 <a
@@ -2525,7 +2525,7 @@ button.cta:hover{background-position:100% 0;filter:none;box-shadow:0 10px 32px r
       <div class="logo"><img src="/ahb-logo.png" alt="AHB"></div>
       <div>
         <div class="brand-name">AHB Panel</div>
-        <div class="brand-ver">14.6.0</div>
+        <div class="brand-ver">14.7.0</div>
       </div>
     </div>
 
@@ -2568,12 +2568,12 @@ button.cta:hover{background-position:100% 0;filter:none;box-shadow:0 10px 32px r
       </form>
     </div>
 
-    <div class="foot">AHB Panel · 14.6.0 · <a href="https://t.me/ahb_panel" target="_blank" rel="noopener">@ahb_panel</a></div>
+    <div class="foot">AHB Panel · 14.7.0 · <a href="https://t.me/ahb_panel" target="_blank" rel="noopener">@ahb_panel</a></div>
   </div>
 
   <div class="hero">
     <img src="/ahb-logo.png" alt="AHB PANEL" style="display:block;margin:0 auto;width:min(300px,78%);height:auto">
-    <div class="wm-ver">14.6.0</div>
+    <div class="wm-ver">14.7.0</div>
     <div class="slogan">آینده مدیریت سرور<br>از اینجا شروع می‌شود</div>
     <div class="chips">
       <div class="chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>پایداری</div>
@@ -4969,7 +4969,7 @@ AHB Panel
 </h1>
 
 <div class="version">
-14.6.0
+14.7.0
 </div>
 
 <div class="text">
@@ -7132,7 +7132,7 @@ DASHBOARD_HTML = r"""
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>AHBPanel 14.6.0</title>
+<title>AHBPanel 14.7.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -7638,7 +7638,7 @@ html.light .toast{background:rgba(255,255,255,.88)}
     <div class="sb-logo-icon"><img src="/ahb-logo.png" alt="AHB"></div>
     <div class="sb-logo-text">
       <div class="sb-logo-name">AHBPanel</div>
-      <div class="sb-logo-ver">v14.6.0</div>
+      <div class="sb-logo-ver">v14.7.0</div>
     </div>
   </div>
   <nav class="nav">
@@ -7658,6 +7658,10 @@ html.light .toast{background:rgba(255,255,255,.88)}
     <button class="nav-item" data-page="nodes" data-perm="nodes">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>
       <span class="nav-label">نودها</span>
+    </button>
+    <button class="nav-item" data-page="mtproxy" data-perm="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 4L3 11l6 2.5L11.5 20l3-5 4.5 3z"/><path d="M9 13.5L21 4"/></svg>
+      <span class="nav-label">پروکسی تلگرام</span>
     </button>
     <button class="nav-item" data-page="create" data-perm="create">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
@@ -7885,6 +7889,43 @@ html.light .toast{background:rgba(255,255,255,.88)}
     <div class="card" style="padding:0">
       <div style="padding:16px 18px;border-bottom:1px solid var(--card-b);font-weight:700">لیست نودها</div>
       <div id="nodesList" style="padding:12px;max-height:640px;overflow:auto">...</div>
+    </div>
+  </div>
+</section>
+<section class="page" id="page-mtproxy">
+  <div class="page-head">
+    <div>
+      <div class="page-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 4L3 11l6 2.5L11.5 20l3-5 4.5 3z"/><path d="M9 13.5L21 4"/></svg><span>پروکسی تلگرام (MTProto)</span></div>
+      <div class="page-sub">ساخت پروکسی تلگرام با لینک آماده · حجم و انقضا برای هر پروکسی</div>
+    </div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">آدرس عمومی پروکسی</div>
+        <div id="mtHint" style="font-size:12px;line-height:2;padding:10px 12px;border-radius:10px;margin-bottom:10px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);color:var(--t2)"></div>
+        <div class="field"><label>آدرس (Host)</label><input id="mtHost" placeholder="xxxx.proxy.rlwy.net" autocomplete="off" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>پورت عمومی</label><input id="mtPort" type="number" placeholder="12345" autocomplete="off" style="direction:ltr;text-align:left"></div>
+        <button class="btn btn-sm" style="width:100%" onclick="mtpSaveSettings()">ذخیره آدرس</button>
+      </div>
+      <div class="card">
+        <div class="card-title">ساخت پروکسی جدید</div>
+        <div class="field"><label>نام</label><input id="mtName" placeholder="مثلاً Proxy 1" autocomplete="off"></div>
+        <div class="field"><label>نوع</label>
+          <select id="mtMode" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--card-b);background:var(--input-bg);color:var(--t1);font-family:inherit">
+            <option value="tls">Fake-TLS (ee) — پیشنهادی</option>
+            <option value="dd">Secure (dd)</option>
+          </select></div>
+        <div class="field"><label>دامنه Fake-TLS</label><input id="mtDomain" value="www.cloudflare.com" autocomplete="off" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>حجم (GB) — 0 = نامحدود</label><input id="mtLimit" type="number" min="0" step="any" value="0" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>مدت (روز) — 0 = نامحدود</label><input id="mtDays" type="number" min="0" value="0" style="direction:ltr;text-align:left"></div>
+        <div class="field"><label>تگ اسپانسر (اختیاری) — ۳۲ کاراکتر هگز از @MTProxybot</label><input id="mtTag" placeholder="32 hex" autocomplete="off" maxlength="32" style="direction:ltr;text-align:left"></div>
+        <button class="btn btn-p" style="width:100%" onclick="mtpCreate()">ساخت پروکسی</button>
+      </div>
+    </div>
+    <div class="card" style="padding:0">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--card-b);font-weight:700;display:flex;justify-content:space-between;align-items:center"><span>لیست پروکسی‌ها</span><span id="mtEngine" style="font-size:11px;font-weight:500;color:var(--t3)"></span></div>
+      <div id="mtList" style="padding:12px;max-height:720px;overflow:auto">...</div>
     </div>
   </div>
 </section>
@@ -8198,12 +8239,75 @@ if(localStorage.getItem('sb_c')==='1'){sb.classList.add('collapsed');main.classL
 document.getElementById('mobMenuBtn').onclick=()=>{sb.classList.add('open');document.getElementById('overlay').classList.add('show')};
 document.getElementById('overlay').onclick=()=>{sb.classList.remove('open');document.getElementById('overlay').classList.remove('show')};
 
+
+const MTP_SP={waiting:'⏳',ready:'🟡',ok:'🟢',error:'🔴'};
+const MTP_ST={active:'فعال',disabled:'غیرفعال',expired:'منقضی',limit:'حجم تمام شد'};
+const MTP_COL={active:'#10b981',disabled:'#94a3b8',expired:'#ef4444',limit:'#f59e0b'};
+async function loadMtp(){
+  const d=await api('/api/mtproxy');if(!d)return;
+  window.__mtp=d;
+  const hi=document.getElementById('mtHost'),pi=document.getElementById('mtPort');
+  if(document.activeElement!==hi)hi.value=d.settings.host||d.host||'';
+  if(document.activeElement!==pi)pi.value=d.settings.port||d.port||'';
+  const hint=document.getElementById('mtHint');
+  if(d.host&&d.port){
+    hint.innerHTML='لینک‌ها با <b dir="ltr">'+esc(d.host)+':'+esc(d.port)+'</b> ساخته می‌شوند.';
+  }else{
+    hint.innerHTML='برای استفاده روی Railway: وارد سرویس شو → <b>Settings → Networking → TCP Proxy</b> → پورت <b dir="ltr">'+d.engine.internal_port+'</b> را وارد کن. آدرس و پورتی که Railway می‌دهد را همین‌جا بنویس و ذخیره کن.';
+  }
+  const en=document.getElementById('mtEngine');
+  en.textContent=d.engine.error?('⚠ '+d.engine.error):(d.engine.listening?('🟢 روشن · پورت '+d.engine.internal_port+' · اتصال زنده: '+d.engine.active):'🔴 خاموش');
+  const box=document.getElementById('mtList');
+  if(!d.proxies.length){box.innerHTML='<div style="text-align:center;color:var(--t3);padding:30px;font-size:13px">هنوز پروکسی نساخته‌ای</div>';return}
+  box.innerHTML=d.proxies.map(p=>{
+    const lim=p.limit_bytes?fmtB(p.limit_bytes):'نامحدود';
+    const pct=p.limit_bytes?Math.min(100,Math.round(p.used/p.limit_bytes*100)):0;
+    return '<div style="border:1px solid var(--card-b);border-radius:14px;padding:14px;margin-bottom:10px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><b>'+esc(p.name)+'</b>'
+    +'<span style="font-size:11px;padding:3px 10px;border-radius:99px;background:'+MTP_COL[p.status]+'22;color:'+MTP_COL[p.status]+'">'+MTP_ST[p.status]+'</span></div>'
+    +'<div style="font-size:12px;color:var(--t3);line-height:2">'
+    +'نوع: '+(p.mode==='dd'?'Secure (dd)':'Fake-TLS (ee) · <span dir="ltr">'+esc(p.domain)+'</span>')+'<br>'
+    +'مصرف: '+fmtB(p.used)+' / '+lim+(p.limit_bytes?' ('+pct+'٪)':'')+' · اتصال زنده: '+p.active_conns+'<br>'
+    +(p.created_at_fa?'ساخت: '+esc(p.created_at_fa)+'<br>':'')
+    +(p.sponsor&&p.sponsor.state!=='off'?'اسپانسر: '+MTP_SP[p.sponsor.state]+' '+esc(p.sponsor.detail)+'<br>':'')
+    +'انقضا: '+(p.expires_at_fa?esc(p.expires_at_fa):'نامحدود')+'</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'
+    +'<button class="btn btn-sm btn-p" onclick="mtpCopy(\''+p.id+'\',\'tg\')">کپی لینک tg://</button>'
+    +'<button class="btn btn-sm" onclick="mtpCopy(\''+p.id+'\',\'web\')">کپی لینک t.me</button>'
+    +'<button class="btn btn-sm" onclick="mtpToggle(\''+p.id+'\','+(!p.enabled)+')">'+(p.enabled?'غیرفعال':'فعال')+'</button>'
+    +'<button class="btn btn-sm" data-id="'+p.id+'" onclick="mtpTag(this.dataset.id)">تگ اسپانسر</button>'
+    +'<button class="btn btn-sm" onclick="mtpReset(\''+p.id+'\')">ریست مصرف</button>'
+    +'<button class="btn btn-sm btn-d" onclick="mtpDel(\''+p.id+'\')">حذف</button></div></div>';
+  }).join('');
+}
+function mtpCopy(id,kind){
+  const p=(window.__mtp&&window.__mtp.proxies||[]).find(x=>x.id===id);if(!p)return;
+  const l=kind==='web'?p.link_web:p.link_tg;
+  if(!l){toast('اول آدرس عمومی را ذخیره کن');return}
+  copyText(l);
+}
+async function mtpSaveSettings(){
+  const r=await api('/api/mtproxy/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({host:document.getElementById('mtHost').value,port:document.getElementById('mtPort').value})});
+  if(r){toast('ذخیره شد');loadMtp()}
+}
+async function mtpCreate(){
+  const body={name:document.getElementById('mtName').value,mode:document.getElementById('mtMode').value,domain:document.getElementById('mtDomain').value,limit_gb:document.getElementById('mtLimit').value,expire_days:document.getElementById('mtDays').value,tag:document.getElementById('mtTag').value.trim()};
+  const r=await api('/api/mtproxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r){toast('پروکسی ساخته شد');document.getElementById('mtName').value='';document.getElementById('mtTag').value='';loadMtp()}
+}
+async function mtpToggle(id,en){const r=await api('/api/mtproxy/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:en})});if(r)loadMtp()}
+async function mtpReset(id){const r=await api('/api/mtproxy/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({reset_usage:true})});if(r){toast('مصرف صفر شد');loadMtp()}}
+async function mtpTag(id){const p=(window.__mtp&&window.__mtp.proxies||[]).find(x=>x.id===id);if(!p)return;const v=prompt('تگ اسپانسر (۳۲ کاراکتر هگز از @MTProxybot) — خالی = حذف تگ',p.tag||'');if(v===null)return;const r=await api('/api/mtproxy/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:v.trim()})});if(r){toast('ذخیره شد');loadMtp()}}
+async function mtpDel(id){if(!confirm('این پروکسی حذف شود؟'))return;const r=await api('/api/mtproxy/'+id,{method:'DELETE'});if(r)loadMtp()}
+setInterval(()=>{const pg=document.getElementById('page-mtproxy');if(pg&&pg.classList.contains('on')&&!document.hidden)loadMtp()},5000);
+
 function goPage(name){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on',n.dataset.page===name));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+name));
   sb.classList.remove('open');document.getElementById('overlay').classList.remove('show');
   window.scrollTo({top:0,behavior:'smooth'});
   if(name==='logs')loadLogs();
+  if(name==='mtproxy')loadMtp();
   if(name==='configs'||name==='dash'||name==='stats')refreshAll();
 }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>goPage(el.dataset.page)));
@@ -9099,6 +9203,932 @@ async def global_exception_handler(
         """,
         status_code=500,
     )
+
+
+# ============================================================
+# MTPROXY — پروکسی تلگرام (MTProto) داخل خود پنل
+# ============================================================
+
+import hmac as _hmac
+import random as _random
+import re as _re
+import socket as _socket
+import struct as _struct
+
+MTP_CRYPTO = True
+try:
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+    from cryptography.hazmat.primitives import serialization as _ser
+except Exception:
+    try:
+        _sp.check_call([_sys.executable, "-m", "pip", "install", "--no-cache-dir", "cryptography"])
+    except Exception:
+        try:
+            _sp.check_call([_sys.executable, "-m", "pip", "install", "--no-cache-dir", "--break-system-packages", "cryptography"])
+        except Exception:
+            pass
+    try:
+        from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+        from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+        from cryptography.hazmat.primitives import serialization as _ser
+    except Exception:
+        MTP_CRYPTO = False
+
+MTP_FILE = DATA_DIR / "ahb_mtproxy.json"
+MTP_PORT = int(os.environ.get("MTPROXY_PORT", "8443") or 8443)
+MTP_DEFAULT_DOMAIN = "www.cloudflare.com"
+MTP_STATE: dict = {"settings": {"host": "", "port": 0}, "proxies": {}}
+MTP_RUNTIME: dict = {"server": None, "error": "", "dirty": False, "conns_total": 0}
+MTP_ACTIVE: dict = defaultdict(int)
+
+_MTP_DC = {
+    1: "149.154.175.50",
+    2: "149.154.167.51",
+    3: "149.154.175.100",
+    4: "149.154.167.91",
+    5: "91.108.56.100",
+}
+_MTP_TAGS = (b"\xef\xef\xef\xef", b"\xee\xee\xee\xee", b"\xdd\xdd\xdd\xdd")
+
+
+def _mtp_load():
+    try:
+        if MTP_FILE.exists():
+            data = json.loads(MTP_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                MTP_STATE["settings"] = {**MTP_STATE["settings"], **(data.get("settings") or {})}
+                MTP_STATE["proxies"] = data.get("proxies") or {}
+    except Exception as e:
+        logger.warning("MTProxy load failed: %s", e)
+
+
+def _mtp_save():
+    try:
+        MTP_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = MTP_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(MTP_STATE, ensure_ascii=False), encoding="utf-8")
+        tmp.replace(MTP_FILE)
+        MTP_RUNTIME["dirty"] = False
+    except Exception as e:
+        logger.warning("MTProxy save failed: %s", e)
+
+
+def _mtp_expired(p: dict) -> bool:
+    exp = p.get("expires_at")
+    if not exp:
+        return False
+    try:
+        return datetime.fromisoformat(exp) <= datetime.now()
+    except Exception:
+        return False
+
+
+def _mtp_over_limit(p: dict) -> bool:
+    lim = int(p.get("limit_bytes") or 0)
+    return lim > 0 and int(p.get("used") or 0) >= lim
+
+
+def _mtp_blocked(p: dict) -> bool:
+    return (not p.get("enabled", True)) or _mtp_expired(p) or _mtp_over_limit(p)
+
+
+def _mtp_public_host_port():
+    st = MTP_STATE["settings"]
+    host = (st.get("host") or os.environ.get("RAILWAY_TCP_PROXY_DOMAIN") or "").strip()
+    port = int(st.get("port") or 0) or int(os.environ.get("RAILWAY_TCP_PROXY_PORT") or 0)
+    return host, port
+
+
+def _mtp_secret_for_link(p: dict) -> str:
+    sec = p["secret"]
+    if p.get("mode") == "dd":
+        return "dd" + sec
+    return "ee" + sec + (p.get("domain") or MTP_DEFAULT_DOMAIN).encode().hex()
+
+
+def _mtp_public(p: dict) -> dict:
+    host, port = _mtp_public_host_port()
+    link_tg = link_web = ""
+    if host and port:
+        q = f"server={host}&port={port}&secret={_mtp_secret_for_link(p)}"
+        link_tg = "tg://proxy?" + q
+        link_web = "https://t.me/proxy?" + q
+    if not p.get("enabled", True):
+        status = "disabled"
+    elif _mtp_expired(p):
+        status = "expired"
+    elif _mtp_over_limit(p):
+        status = "limit"
+    else:
+        status = "active"
+    return {
+        "id": p["id"],
+        "name": p.get("name", ""),
+        "mode": p.get("mode", "tls"),
+        "domain": p.get("domain", ""),
+        "enabled": bool(p.get("enabled", True)),
+        "status": status,
+        "used": int(p.get("used") or 0),
+        "limit_bytes": int(p.get("limit_bytes") or 0),
+        "created_at": p.get("created_at"),
+        "created_at_fa": iran_datetime_text(p.get("created_at")),
+        "expires_at": p.get("expires_at"),
+        "expires_at_fa": iran_datetime_text(p.get("expires_at")),
+        "active_conns": int(MTP_ACTIVE.get(p["id"], 0)),
+        "link_tg": link_tg,
+        "link_web": link_web,
+        "tag": _mtp_tag_clean(p.get("tag")),
+        "sponsor": _mtp_sponsor_view(p),
+    }
+
+
+# ---------------- crypto / protocol ----------------
+
+def _aes_ctr(key: bytes, iv: bytes):
+    return Cipher(algorithms.AES(key), modes.CTR(iv)).encryptor()
+
+
+class _TLSReader:
+    def __init__(self, reader):
+        self.r = reader
+        self.buf = bytearray()
+
+    async def _fill(self):
+        while not self.buf:
+            hdr = await self.r.readexactly(5)
+            ln = int.from_bytes(hdr[3:5], "big")
+            data = await self.r.readexactly(ln)
+            if hdr[0] == 0x14:
+                continue
+            if hdr[0] != 0x17:
+                raise ConnectionError("bad tls record")
+            self.buf += data
+
+    async def read(self, n):
+        await self._fill()
+        out = bytes(self.buf[:n])
+        del self.buf[:n]
+        return out
+
+    async def readexactly(self, n):
+        out = b""
+        while len(out) < n:
+            out += await self.read(n - len(out))
+        return out
+
+
+class _TLSWriter:
+    def __init__(self, writer):
+        self.w = writer
+
+    def write(self, data):
+        for i in range(0, len(data), 16384):
+            chunk = data[i:i + 16384]
+            self.w.write(b"\x17\x03\x03" + len(chunk).to_bytes(2, "big") + chunk)
+
+    async def drain(self):
+        await self.w.drain()
+
+    def close(self):
+        self.w.close()
+
+
+def _mtp_tls_match(hs: bytes, proxies: list):
+    if len(hs) < 76 or hs[:3] != b"\x16\x03\x01":
+        return None
+    digest = hs[11:43]
+    msg = hs[:11] + b"\x00" * 32 + hs[43:]
+    for p in proxies:
+        sec = bytes.fromhex(p["secret"])
+        comp = _hmac.new(sec, msg, hashlib.sha256).digest()
+        x = bytes(a ^ b for a, b in zip(digest, comp))
+        if x[:28] != b"\x00" * 28:
+            continue
+        ts = int.from_bytes(x[28:], "little")
+        if abs(time.time() - ts) > 2 * 86400:
+            continue
+        return p
+    return None
+
+
+def _mtp_server_hello(secret: bytes, hs: bytes) -> bytes:
+    sid_len = hs[43]
+    sid = hs[44:44 + sid_len]
+    pub = X25519PrivateKey.generate().public_key().public_bytes(
+        _ser.Encoding.Raw, _ser.PublicFormat.Raw
+    )
+    ext = (
+        b"\x00\x2e" + b"\x00\x2b\x00\x02\x03\x04"
+        + b"\x00\x33\x00\x24" + b"\x00\x1d\x00\x20" + pub
+    )
+    srv = b"\x03\x03" + b"\x00" * 32 + bytes([sid_len]) + sid + b"\x13\x01" + b"\x00" + ext
+    hello = (
+        b"\x16\x03\x03" + (len(srv) + 4).to_bytes(2, "big")
+        + b"\x02" + len(srv).to_bytes(3, "big") + srv
+    )
+    http = os.urandom(_random.choice((2576, 2690, 2831, 3012, 3140)))
+    hello += b"\x14\x03\x03\x00\x01\x01" + b"\x17\x03\x03" + len(http).to_bytes(2, "big") + http
+    comp = _hmac.new(secret, hs[11:43] + hello, hashlib.sha256).digest()
+    return hello[:11] + comp + hello[43:]
+
+
+def _mtp_obf_match(hs: bytes, candidates: list):
+    pk_iv = hs[8:56]
+    dec_pre, dec_iv = pk_iv[:32], pk_iv[32:]
+    rev = pk_iv[::-1]
+    enc_pre, enc_iv = rev[:32], rev[32:]
+    for p in candidates:
+        sec = bytes.fromhex(p["secret"])
+        dec = _aes_ctr(hashlib.sha256(dec_pre + sec).digest(), dec_iv)
+        d = dec.update(hs)
+        if d[56:60] in _MTP_TAGS:
+            dc = int.from_bytes(d[60:62], "little", signed=True)
+            enc = _aes_ctr(hashlib.sha256(enc_pre + sec).digest(), enc_iv)
+            return p, dec, enc, d[56:60], dc
+    return None
+
+
+async def _mtp_tg_connect(dc: int, tag: bytes):
+    idx = abs(dc)
+    if idx > 10000:
+        idx -= 10000
+    host = _MTP_DC.get(idx)
+    if not host:
+        raise ConnectionError("bad dc")
+    tr, tw = await asyncio.wait_for(asyncio.open_connection(host, 443), 10)
+    while True:
+        rnd = bytearray(os.urandom(64))
+        if rnd[0] == 0xEF:
+            continue
+        if bytes(rnd[:4]) in (b"HEAD", b"POST", b"GET ", b"\xee\xee\xee\xee", b"\xdd\xdd\xdd\xdd", b"\x16\x03\x01\x02"):
+            continue
+        if rnd[4:8] == b"\x00\x00\x00\x00":
+            continue
+        break
+    rnd[56:60] = tag
+    rnd[60:62] = _struct.pack("<h", dc)
+    rev = bytes(rnd[8:56])[::-1]
+    tg_enc = _aes_ctr(bytes(rnd[8:40]), bytes(rnd[40:56]))
+    tg_dec = _aes_ctr(rev[:32], rev[32:])
+    full = tg_enc.update(bytes(rnd))
+    tw.write(bytes(rnd[:56]) + full[56:64])
+    await tw.drain()
+    return tr, tw, tg_enc, tg_dec
+
+
+# ---------------- middle-proxy: کانال اسپانسر (Proxy Tag) ----------------
+# تلگرام تگ اسپانسر را فقط وقتی قبول می‌کند که ترافیک از مسیر «Middle-Proxy»
+# (سرورهای رسمی تلگرام روی پورت 8888) رد شود. این بخش همان پروتکل را پیاده می‌کند.
+# اگر هر مرحله‌اش شکست بخورد، اتصال خودکار به حالت مستقیم برمی‌گردد (پروکسی کار می‌کند
+# ولی اسپانسر نمایش داده نمی‌شود) و علت در پنل نشان داده می‌شود.
+
+import binascii as _binascii
+import ipaddress as _ipaddress
+
+MTP_MID_FILE = DATA_DIR / "ahb_mtproxy_mid.json"
+MTP_MID: dict = {"secret": b"", "dcs": {}, "ts": 0.0, "error": "", "public_ip": os.environ.get("MTPROXY_PUBLIC_IP", "").strip()}
+MTP_SPONSOR: dict = {}
+
+_RPC_NONCE = b"\xaa\x87\xcb\x7a"
+_RPC_HANDSHAKE = b"\xf5\xee\x82\x76"
+_RPC_CRYPTO_AES = b"\x01\x00\x00\x00"
+_RPC_PROXY_REQ = b"\xee\xf1\xce\x36"
+_RPC_PROXY_ANS = b"\x0d\xda\x03\x44"
+_RPC_CLOSE_EXT = b"\xa2\x34\xb6\x5e"
+_RPC_SIMPLE_ACK = b"\x9b\x40\xac\x3b"
+_RPC_PID = b"IPIPPRPDTIME"
+_RPC_PROXY_TAG_TAG = b"\xae\x26\x1e\xdb"
+_F_NOT_ENCRYPTED = 0x2
+_F_HAS_AD_TAG = 0x8
+_F_MAGIC = 0x1000
+_F_EXTMODE2 = 0x20000
+_F_QUICKACK = 0x80
+_F_PAD = 0x8000000
+_F_INTERMEDIATE = 0x20000000
+_F_ABRIDGED = 0x40000000
+_MTP_MAX_PKT = 1 << 24
+
+# آدرس‌های پیش‌فرض (فقط وقتی getProxyConfig در دسترس نبود)
+_MTP_MID_FALLBACK = {
+    1: [("149.154.175.50", 8888)], -1: [("149.154.175.50", 8888)],
+    2: [("149.154.161.144", 8888)], -2: [("149.154.161.144", 8888)],
+    3: [("149.154.175.100", 8888)], -3: [("149.154.175.100", 8888)],
+    4: [("91.108.4.136", 8888)], -4: [("149.154.165.109", 8888)],
+    5: [("91.108.56.183", 8888)], -5: [("91.108.56.183", 8888)],
+}
+
+
+def _mtp_tag_clean(v) -> str:
+    v = str(v or "").strip().lower()
+    return v if _re.fullmatch(r"[0-9a-f]{32}", v) else ""
+
+
+def _mtp_adtag(p: dict) -> bytes:
+    t = _mtp_tag_clean(p.get("tag"))
+    return bytes.fromhex(t) if t else b""
+
+
+def _mtp_sponsor_note(p: dict, ok: bool, err: str = ""):
+    s = MTP_SPONSOR.setdefault(p["id"], {"ok": 0, "fail": 0, "last_ok": False, "error": ""})
+    s["last_ok"] = ok
+    if ok:
+        s["ok"] += 1
+        s["error"] = ""
+    else:
+        s["fail"] += 1
+        s["error"] = err[:160]
+        logger.warning("MTProxy sponsor handshake failed (%s): %s", p.get("name"), err)
+
+
+def _mtp_sponsor_view(p: dict) -> dict:
+    if not _mtp_adtag(p):
+        return {"state": "off", "detail": ""}
+    if not MTP_MID["secret"]:
+        return {"state": "waiting", "detail": MTP_MID["error"] or "در حال دریافت تنظیمات تلگرام..."}
+    s = MTP_SPONSOR.get(p["id"])
+    if not s:
+        return {"state": "ready", "detail": "آماده؛ بعد از اولین اتصال وضعیت واقعی اینجا نشان داده می‌شود"}
+    if s["last_ok"]:
+        return {"state": "ok", "detail": "اتصال از مسیر Middle-Proxy با تگ موفق بود (%d بار)" % s["ok"]}
+    return {"state": "error", "detail": "Middle-Proxy وصل نشد، حالت مستقیم (بدون اسپانسر) فعال است: " + s["error"]}
+
+
+def _mtp_mid_load():
+    try:
+        if MTP_MID_FILE.exists():
+            d = json.loads(MTP_MID_FILE.read_text(encoding="utf-8"))
+            sec = bytes.fromhex(d.get("secret") or "")
+            dcs = {int(k): [(a, int(b)) for a, b in v] for k, v in (d.get("dcs") or {}).items()}
+            if len(sec) >= 32 and dcs:
+                MTP_MID["secret"], MTP_MID["dcs"], MTP_MID["ts"] = sec, dcs, float(d.get("ts") or 0)
+                if not MTP_MID["public_ip"]:
+                    MTP_MID["public_ip"] = d.get("public_ip") or ""
+    except Exception as e:
+        logger.warning("MTProxy mid cache load failed: %s", e)
+
+
+def _mtp_mid_parse_config(text: str) -> dict:
+    out: dict = {}
+    for m in _re.finditer(r"proxy_for\s+(-?\d+)\s+(\d+\.\d+\.\d+\.\d+):(\d+)\s*;", text):
+        out.setdefault(int(m.group(1)), []).append((m.group(2), int(m.group(3))))
+    return out
+
+
+async def _mtp_mid_refresh():
+    try:
+        async with httpx.AsyncClient(timeout=15, follow_redirects=True) as c:
+            r1 = await c.get("https://core.telegram.org/getProxySecret")
+            r1.raise_for_status()
+            sec = r1.content
+            if len(sec) < 32:
+                raise ValueError("proxy-secret نامعتبر")
+            dcs: dict = {}
+            try:
+                r2 = await c.get("https://core.telegram.org/getProxyConfig")
+                r2.raise_for_status()
+                dcs = _mtp_mid_parse_config(r2.text)
+            except Exception as e:
+                logger.warning("getProxyConfig failed: %s", e)
+            if not dcs:
+                dcs = dict(MTP_MID["dcs"]) or dict(_MTP_MID_FALLBACK)
+            ip = MTP_MID["public_ip"]
+            if not os.environ.get("MTPROXY_PUBLIC_IP"):
+                for u in ("https://api.ipify.org", "https://ipv4.icanhazip.com"):
+                    try:
+                        rr = await c.get(u)
+                        cand = rr.text.strip()
+                        _ipaddress.IPv4Address(cand)
+                        ip = cand
+                        break
+                    except Exception:
+                        continue
+        MTP_MID.update({"secret": sec, "dcs": dcs, "ts": time.time(), "error": "", "public_ip": ip})
+        try:
+            tmp = MTP_MID_FILE.with_suffix(".tmp")
+            tmp.write_text(json.dumps({
+                "secret": sec.hex(), "ts": MTP_MID["ts"], "public_ip": ip,
+                "dcs": {str(k): v for k, v in dcs.items()},
+            }), encoding="utf-8")
+            tmp.replace(MTP_MID_FILE)
+        except Exception:
+            pass
+        logger.info("MTProxy middle config ready: %d dc entries, public ip %s", len(dcs), ip or "?")
+        return True
+    except Exception as e:
+        MTP_MID["error"] = "دریافت تنظیمات تلگرام ناموفق: %s" % (str(e) or e.__class__.__name__)
+        logger.warning("MTProxy middle refresh failed: %s", e)
+        return False
+
+
+async def _mtp_mid_loop():
+    while True:
+        ok = await _mtp_mid_refresh()
+        await asyncio.sleep(6 * 3600 if ok else 300)
+
+
+def _mid_frame(msg: bytes, seq: int) -> bytes:
+    body = (len(msg) + 12).to_bytes(4, "little") + seq.to_bytes(4, "little", signed=True) + msg
+    full = body + (_binascii.crc32(body) & 0xFFFFFFFF).to_bytes(4, "little")
+    return full + b"\x04\x00\x00\x00" * ((-len(full) % 16) // 4)
+
+
+class _MidIO:
+    """سوکت Middle-Proxy: اول متن ساده، بعد از هندشیک AES-CBC."""
+
+    def __init__(self, reader, writer):
+        self.r, self.w = reader, writer
+        self.enc = self.dec = None
+        self.cbuf = bytearray()
+        self.pbuf = bytearray()
+
+    def start_crypto(self, enc, dec):
+        self.enc, self.dec = enc, dec
+
+    async def readexactly(self, n: int) -> bytes:
+        while len(self.pbuf) < n:
+            if self.dec is None:
+                self.pbuf += await self.r.readexactly(n - len(self.pbuf))
+                break
+            chunk = await self.r.read(65536)
+            if not chunk:
+                raise ConnectionError("middle closed")
+            self.cbuf += chunk
+            k = len(self.cbuf) // 16 * 16
+            if k:
+                self.pbuf += self.dec.update(bytes(self.cbuf[:k]))
+                del self.cbuf[:k]
+        out = bytes(self.pbuf[:n])
+        del self.pbuf[:n]
+        return out
+
+    def write(self, data: bytes):
+        if self.enc is not None:
+            if len(data) % 16:
+                raise ValueError("unaligned frame")
+            data = self.enc.update(data)
+        self.w.write(data)
+
+
+async def _mid_read_frame(io: _MidIO) -> bytes:
+    while True:
+        ln = int.from_bytes(await io.readexactly(4), "little")
+        if ln != 4:
+            break
+    if ln % 4 or ln < 12 or ln > _MTP_MAX_PKT:
+        raise ConnectionError("bad middle frame length")
+    rest = await io.readexactly(ln - 4)
+    if (_binascii.crc32(ln.to_bytes(4, "little") + rest[:-4]) & 0xFFFFFFFF) != int.from_bytes(rest[-4:], "little"):
+        raise ConnectionError("bad middle frame crc")
+    return rest[4:-4]
+
+
+def _mid_keys(nonce_srv, nonce_clt, ts, srv_ip, clt_port, purpose, clt_ip, srv_port, secret):
+    s = (nonce_srv + nonce_clt + ts + srv_ip + clt_port + purpose + clt_ip + srv_port
+         + secret + nonce_srv + nonce_clt)
+    key = hashlib.md5(s[1:]).digest()[:12] + hashlib.sha1(s).digest()
+    iv = hashlib.md5(s[2:]).digest()
+    return key, iv
+
+
+def _mid_ipport(ip, port) -> bytes:
+    try:
+        a = _ipaddress.ip_address(ip)
+        if a.version == 4:
+            return b"\x00" * 10 + b"\xff\xff" + a.packed + int(port).to_bytes(4, "little")
+        return a.packed + int(port).to_bytes(4, "little")
+    except Exception:
+        return b"\x00" * 20
+
+
+async def _mtp_mid_connect(dc: int):
+    secret = MTP_MID["secret"]
+    dcs = MTP_MID["dcs"]
+    if not secret or not dcs:
+        raise ConnectionError(MTP_MID["error"] or "تنظیمات Middle-Proxy هنوز دریافت نشده")
+    cands = dcs.get(dc) or dcs.get(abs(dc)) or dcs.get(2)
+    if not cands:
+        raise ConnectionError("DC %s در تنظیمات تلگرام نیست" % dc)
+    host, port = _random.choice(cands)
+    r, w = await asyncio.wait_for(asyncio.open_connection(host, port, family=_socket.AF_INET), 8)
+    try:
+        sock = w.get_extra_info("socket")
+        if sock is not None:
+            try:
+                sock.setsockopt(_socket.IPPROTO_TCP, _socket.TCP_NODELAY, 1)
+            except Exception:
+                pass
+        my_ip, my_port = w.get_extra_info("sockname")[:2]
+        srv_ip, srv_port = w.get_extra_info("peername")[:2]
+        try:
+            private = not _ipaddress.ip_address(my_ip).is_global
+        except Exception:
+            private = True
+        if private and MTP_MID["public_ip"]:
+            my_ip = MTP_MID["public_ip"]
+        try:
+            my_ip_b = _socket.inet_pton(_socket.AF_INET, my_ip)[::-1]
+            srv_ip_b = _socket.inet_pton(_socket.AF_INET, srv_ip)[::-1]
+        except Exception:
+            raise ConnectionError("آدرس IPv4 سرور پیدا نشد")
+        io = _MidIO(r, w)
+        key_sel = secret[:4]
+        ts = (int(time.time()) & 0xFFFFFFFF).to_bytes(4, "little")
+        nonce = os.urandom(16)
+        io.write(_mid_frame(_RPC_NONCE + key_sel + _RPC_CRYPTO_AES + ts + nonce, -2))
+        await w.drain()
+        ans = await asyncio.wait_for(_mid_read_frame(io), 8)
+        if len(ans) != 32 or ans[:4] != _RPC_NONCE or ans[4:8] != key_sel or ans[8:12] != _RPC_CRYPTO_AES:
+            raise ConnectionError("پاسخ nonce از تلگرام نامعتبر (proxy-secret قدیمی؟)")
+        srv_nonce = ans[16:32]
+        mp = _struct.pack("<H", my_port)
+        sp = _struct.pack("<H", srv_port)
+        ek, eiv = _mid_keys(srv_nonce, nonce, ts, srv_ip_b, mp, b"CLIENT", my_ip_b, sp, secret)
+        dk, div = _mid_keys(srv_nonce, nonce, ts, srv_ip_b, mp, b"SERVER", my_ip_b, sp, secret)
+        io.start_crypto(
+            Cipher(algorithms.AES(ek), modes.CBC(eiv)).encryptor(),
+            Cipher(algorithms.AES(dk), modes.CBC(div)).decryptor(),
+        )
+        io.write(_mid_frame(_RPC_HANDSHAKE + b"\x00\x00\x00\x00" + _RPC_PID + _RPC_PID, -1))
+        await w.drain()
+        hans = await asyncio.wait_for(_mid_read_frame(io), 8)
+        if len(hans) != 32 or hans[:4] != _RPC_HANDSHAKE or hans[20:32] != _RPC_PID:
+            raise ConnectionError("هندشیک رمزشده با تلگرام رد شد (احتمالاً NAT پورت را عوض کرده)")
+        return io, my_ip, my_port
+    except BaseException:
+        try:
+            w.close()
+        except Exception:
+            pass
+        raise
+
+
+def _mtp_parse_client(tag: bytes, buf: bytearray):
+    """یک پکت کامل از بافر کلاینت بیرون می‌کشد: (msg, quickack) یا None."""
+    if tag == b"\xef\xef\xef\xef":
+        if not buf:
+            return None
+        b0 = buf[0]
+        quick = bool(b0 & 0x80)
+        ln = b0 & 0x7F
+        hdr = 1
+        if ln == 0x7F:
+            if len(buf) < 4:
+                return None
+            ln = int.from_bytes(buf[1:4], "little")
+            hdr = 4
+        n = ln * 4
+        if n > _MTP_MAX_PKT:
+            raise ConnectionError("packet too large")
+        if len(buf) < hdr + n:
+            return None
+        msg = bytes(buf[hdr:hdr + n])
+        del buf[:hdr + n]
+        return msg, quick
+    if len(buf) < 4:
+        return None
+    v = int.from_bytes(buf[:4], "little")
+    quick = bool(v & 0x80000000)
+    n = v & 0x7FFFFFFF
+    if n > _MTP_MAX_PKT:
+        raise ConnectionError("packet too large")
+    if len(buf) < 4 + n:
+        return None
+    msg = bytes(buf[4:4 + n])
+    del buf[:4 + n]
+    if tag == b"\xdd\xdd\xdd\xdd":
+        msg = msg[:len(msg) - (len(msg) % 4)]
+    return msg, quick
+
+
+def _mtp_wrap_client(tag: bytes, msg: bytes) -> bytes:
+    if tag == b"\xef\xef\xef\xef":
+        ln = len(msg) // 4
+        return (bytes([ln]) if ln < 0x7F else b"\x7f" + ln.to_bytes(3, "little")) + msg
+    if tag == b"\xee\xee\xee\xee":
+        return len(msg).to_bytes(4, "little") + msg
+    pad = _random.randrange(4)
+    return (len(msg) + pad).to_bytes(4, "little") + msg + os.urandom(pad)
+
+
+def _mid_proxy_req(msg, flags, conn_id, remote, ours, adtag) -> bytes:
+    extra = _RPC_PROXY_TAG_TAG + bytes([len(adtag)]) + adtag
+    extra += b"\x00" * (-len(extra) % 4)
+    return (_RPC_PROXY_REQ + flags.to_bytes(4, "little") + conn_id + remote + ours
+            + len(extra).to_bytes(4, "little") + extra + msg)
+
+
+async def _mtp_mid_session(p, proto, mid, peer, adtag, cr, cw, dec, enc):
+    io, my_ip, my_port = mid
+    base = _F_HAS_AD_TAG | _F_MAGIC | _F_EXTMODE2
+    if proto == b"\xef\xef\xef\xef":
+        base |= _F_ABRIDGED
+    elif proto == b"\xee\xee\xee\xee":
+        base |= _F_INTERMEDIATE
+    else:
+        base |= _F_INTERMEDIATE | _F_PAD
+    conn_id = os.urandom(8)
+    remote = _mid_ipport(peer[0], peer[1]) if peer else b"\x00" * 20
+    ours = _mid_ipport(my_ip, my_port)
+    seq = [0]
+
+    def account(n):
+        p["used"] = int(p.get("used") or 0) + n
+        MTP_RUNTIME["dirty"] = True
+
+    async def c2t():
+        buf = bytearray()
+        try:
+            while True:
+                data = await cr.read(65536)
+                if not data:
+                    return
+                account(len(data))
+                if _mtp_blocked(p):
+                    return
+                buf += dec.update(data)
+                sent = False
+                while True:
+                    pkt = _mtp_parse_client(proto, buf)
+                    if pkt is None:
+                        break
+                    msg, quick = pkt
+                    fl = base | (_F_QUICKACK if quick else 0)
+                    if msg[:8] == b"\x00" * 8:
+                        fl |= _F_NOT_ENCRYPTED
+                    io.write(_mid_frame(_mid_proxy_req(msg, fl, conn_id, remote, ours, adtag), seq[0]))
+                    seq[0] += 1
+                    sent = True
+                if sent:
+                    await io.w.drain()
+        except Exception:
+            return
+
+    async def t2c():
+        try:
+            while True:
+                m = await _mid_read_frame(io)
+                t = m[:4]
+                if t == _RPC_PROXY_ANS:
+                    out = _mtp_wrap_client(proto, m[16:])
+                elif t == _RPC_SIMPLE_ACK:
+                    ack = m[12:16]
+                    out = ack[::-1] if proto == b"\xef\xef\xef\xef" else ack
+                elif t == _RPC_CLOSE_EXT:
+                    return
+                else:
+                    continue
+                account(len(out))
+                if _mtp_blocked(p):
+                    return
+                cw.write(enc.update(out))
+                await cw.drain()
+        except Exception:
+            return
+
+    t1 = asyncio.create_task(c2t())
+    t2 = asyncio.create_task(t2c())
+    done, pending = await asyncio.wait({t1, t2}, return_when=asyncio.FIRST_COMPLETED)
+    for t in pending:
+        t.cancel()
+
+
+async def _mtp_pipe(read, write, c_in, c_out, p):
+    try:
+        while True:
+            data = await read(65536)
+            if not data:
+                break
+            p["used"] = int(p.get("used") or 0) + len(data)
+            MTP_RUNTIME["dirty"] = True
+            if _mtp_blocked(p):
+                break
+            write.write(c_out.update(c_in.update(data)))
+            await write.drain()
+    except Exception:
+        pass
+
+
+async def _mtp_handle(reader, writer):
+    p = None
+    tw = None
+    cw = writer
+    try:
+        sock = writer.get_extra_info("socket")
+        if sock is not None:
+            try:
+                sock.setsockopt(_socket.IPPROTO_TCP, _socket.TCP_NODELAY, 1)
+            except Exception:
+                pass
+        proxies = [x for x in MTP_STATE["proxies"].values() if not _mtp_blocked(x)]
+        if not proxies:
+            return
+        first = await asyncio.wait_for(reader.readexactly(5), 15)
+        cr = reader
+        if first[:3] == b"\x16\x03\x01":
+            ln = int.from_bytes(first[3:5], "big")
+            if ln < 40 or ln > 4096:
+                return
+            hs_tls = first + await asyncio.wait_for(reader.readexactly(ln), 15)
+            m = _mtp_tls_match(hs_tls, proxies)
+            if not m:
+                return
+            writer.write(_mtp_server_hello(bytes.fromhex(m["secret"]), hs_tls))
+            await writer.drain()
+            cr = _TLSReader(reader)
+            cw = _TLSWriter(writer)
+            hs = await asyncio.wait_for(cr.readexactly(64), 15)
+            cands = [m]
+        else:
+            hs = first + await asyncio.wait_for(reader.readexactly(59), 15)
+            cands = [x for x in proxies if x.get("mode") == "dd" or True]
+        res = _mtp_obf_match(hs, cands)
+        if not res:
+            return
+        p, dec, enc, tag, dc = res
+        adtag = _mtp_adtag(p)
+        mid = None
+        if adtag and MTP_MID["secret"]:
+            try:
+                mid = await _mtp_mid_connect(dc)
+                _mtp_sponsor_note(p, True)
+            except Exception as e:
+                mid = None
+                _mtp_sponsor_note(p, False, str(e) or e.__class__.__name__)
+        if mid is not None:
+            tw = mid[0].w
+            peer = writer.get_extra_info("peername")
+            MTP_ACTIVE[p["id"]] += 1
+            MTP_RUNTIME["conns_total"] += 1
+            await _mtp_mid_session(p, tag, mid, tuple(peer[:2]) if peer else None, adtag, cr, cw, dec, enc)
+            return
+        tr, tw, tg_enc, tg_dec = await _mtp_tg_connect(dc, tag)
+        MTP_ACTIVE[p["id"]] += 1
+        MTP_RUNTIME["conns_total"] += 1
+        t1 = asyncio.create_task(_mtp_pipe(cr.read, tw, dec, tg_enc, p))
+        t2 = asyncio.create_task(_mtp_pipe(tr.read, cw, tg_dec, enc, p))
+        done, pending = await asyncio.wait({t1, t2}, return_when=asyncio.FIRST_COMPLETED)
+        for t in pending:
+            t.cancel()
+    except Exception:
+        pass
+    finally:
+        if p is not None:
+            MTP_ACTIVE[p["id"]] = max(0, MTP_ACTIVE[p["id"]] - 1)
+        for w in (tw, writer):
+            try:
+                if w is not None:
+                    w.close()
+            except Exception:
+                pass
+
+
+async def _mtp_flush_loop():
+    while True:
+        await asyncio.sleep(20)
+        if MTP_RUNTIME.get("dirty"):
+            _mtp_save()
+
+
+@app.on_event("startup")
+async def _mtp_startup():
+    _mtp_load()
+    if not MTP_CRYPTO:
+        MTP_RUNTIME["error"] = "کتابخانه‌ی cryptography نصب نشد"
+        logger.warning("MTProxy disabled: cryptography missing")
+        return
+    try:
+        MTP_RUNTIME["server"] = await asyncio.start_server(
+            _mtp_handle, "0.0.0.0", MTP_PORT, limit=2 ** 20
+        )
+        logger.info("MTProxy listening on :%d", MTP_PORT)
+    except Exception as e:
+        MTP_RUNTIME["error"] = f"پورت {MTP_PORT} باز نشد: {e}"
+        logger.warning("MTProxy bind failed: %s", e)
+    asyncio.create_task(_mtp_flush_loop())
+    _mtp_mid_load()
+    asyncio.create_task(_mtp_mid_loop())
+
+
+@app.on_event("shutdown")
+async def _mtp_shutdown():
+    if MTP_RUNTIME.get("dirty"):
+        _mtp_save()
+
+
+# ---------------- API ----------------
+
+def _mtp_clean_domain(v) -> str:
+    v = str(v or "").strip().lower()
+    v = _re.sub(r"^https?://", "", v).split("/")[0]
+    if not _re.fullmatch(r"[a-z0-9]([a-z0-9.-]{1,60})[a-z0-9]", v) or "." not in v:
+        return MTP_DEFAULT_DOMAIN
+    return v
+
+
+def _mtp_tag_input(v) -> str:
+    raw = str(v or "").strip()
+    tag = _mtp_tag_clean(raw)
+    if raw and not tag:
+        raise HTTPException(status_code=400, detail="تگ باید دقیقاً ۳۲ کاراکتر هگز باشد")
+    return tag
+
+
+@app.get("/api/mtproxy")
+async def api_mtp_list(token=Depends(require_perm("settings"))):
+    host, port = _mtp_public_host_port()
+    items = sorted(MTP_STATE["proxies"].values(), key=lambda x: x.get("created_at") or "")
+    return {
+        "engine": {
+            "ok": MTP_CRYPTO,
+            "listening": MTP_RUNTIME.get("server") is not None,
+            "internal_port": MTP_PORT,
+            "error": MTP_RUNTIME.get("error", ""),
+            "active": sum(MTP_ACTIVE.values()),
+            "mid": {"ready": bool(MTP_MID["secret"]), "error": MTP_MID["error"], "public_ip": MTP_MID["public_ip"]},
+        },
+        "host": host,
+        "port": port,
+        "settings": MTP_STATE["settings"],
+        "railway_auto": bool(os.environ.get("RAILWAY_TCP_PROXY_DOMAIN")),
+        "proxies": [_mtp_public(p) for p in items],
+    }
+
+
+@app.post("/api/mtproxy")
+async def api_mtp_create(request: Request, token=Depends(require_perm("settings"))):
+    body = await request.json()
+    name = str(body.get("name") or "").strip()[:40] or "Proxy"
+    mode = "dd" if body.get("mode") == "dd" else "tls"
+    try:
+        limit_gb = max(0.0, float(body.get("limit_gb") or 0))
+        days = max(0, int(body.get("expire_days") or 0))
+    except Exception:
+        raise HTTPException(status_code=400, detail="مقدار نامعتبر")
+    tag = _mtp_tag_input(body.get("tag"))
+    pid = secrets.token_hex(4)
+    MTP_STATE["proxies"][pid] = {
+        "id": pid,
+        "name": name,
+        "secret": secrets.token_hex(16),
+        "mode": mode,
+        "domain": _mtp_clean_domain(body.get("domain")),
+        "enabled": True,
+        "created_at": datetime.now().isoformat(),
+        "expires_at": (datetime.now() + timedelta(days=days)).isoformat() if days else None,
+        "limit_bytes": int(limit_gb * 1024 ** 3),
+        "used": 0,
+        "tag": tag,
+    }
+    _mtp_save()
+    return {"ok": True, "proxy": _mtp_public(MTP_STATE["proxies"][pid])}
+
+
+@app.patch("/api/mtproxy/{pid}")
+async def api_mtp_patch(pid: str, request: Request, token=Depends(require_perm("settings"))):
+    p = MTP_STATE["proxies"].get(pid)
+    if not p:
+        raise HTTPException(status_code=404, detail="پیدا نشد")
+    body = await request.json()
+    if "enabled" in body:
+        p["enabled"] = bool(body["enabled"])
+    if "name" in body:
+        p["name"] = str(body["name"]).strip()[:40] or p.get("name", "Proxy")
+    if "limit_gb" in body:
+        p["limit_bytes"] = int(max(0.0, float(body["limit_gb"] or 0)) * 1024 ** 3)
+    if "expire_days" in body:
+        d = max(0, int(body["expire_days"] or 0))
+        p["expires_at"] = (datetime.now() + timedelta(days=d)).isoformat() if d else None
+    if "tag" in body:
+        p["tag"] = _mtp_tag_input(body["tag"])
+        MTP_SPONSOR.pop(p["id"], None)
+    if body.get("reset_usage"):
+        p["used"] = 0
+    _mtp_save()
+    return {"ok": True, "proxy": _mtp_public(p)}
+
+
+@app.delete("/api/mtproxy/{pid}")
+async def api_mtp_delete(pid: str, token=Depends(require_perm("settings"))):
+    if MTP_STATE["proxies"].pop(pid, None) is None:
+        raise HTTPException(status_code=404, detail="پیدا نشد")
+    _mtp_save()
+    return {"ok": True}
+
+
+@app.post("/api/mtproxy/settings")
+async def api_mtp_settings(request: Request, token=Depends(require_perm("settings"))):
+    body = await request.json()
+    host = _re.sub(r"^[a-z]+://", "", str(body.get("host") or "").strip()).split("/")[0].split(":")[0]
+    try:
+        port = int(body.get("port") or 0)
+    except Exception:
+        port = 0
+    if port < 0 or port > 65535:
+        raise HTTPException(status_code=400, detail="پورت نامعتبر")
+    MTP_STATE["settings"] = {"host": host, "port": port}
+    _mtp_save()
+    return {"ok": True}
 
 
 # ============================================================
